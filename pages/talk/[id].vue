@@ -135,6 +135,8 @@ async function handleStop() {
 
 async function uploadFile(file) {
 
+    console.log("[ upload file ]")
+
     let formData = new FormData()
     formData.append("file", file)
     formData.append("name", capitalName(route.params.id))
@@ -152,11 +154,11 @@ async function uploadFile(file) {
         body: formData,
     })
 
-    const result = await response
+    //const result = await response
 
-    if(result.hasOwnProperty('text')) {
+    if(response.hasOwnProperty('text')) {
         
-        speakMessage(result.text)
+        speakMessage(response.text)
 
     }
 
@@ -171,7 +173,7 @@ async function speakMessage(msg) {
     const utterThis = new SpeechSynthesisUtterance(msg);
 
     const botId = route.params.id
-    const name = botId === "junko" ? "Google 日本語" : botId === "alice" ? "Karen" : "Daniel"
+    const name = botId === "junko" ? "Google 日本語" : botId === "alice" ? "Karen" : botId === "mark" ? "Google UK English Male" : "Daniel"
 
     const voices = synth.getVoices();
     for (const voice of voices) {
@@ -180,8 +182,8 @@ async function speakMessage(msg) {
         }
     }
     
-    utterThis.pitch = botId === "junko" ? 1.1 : botId === "alice" ? 1.3 : 0.9
-    utterThis.rate = botId === "junko" ? 1.0 : botId === "alice" ? 0.9 : 0.8
+    utterThis.pitch = botId === "junko" ? 1.1 : botId === "alice" ? 1.3 : botId === "mark" ? 0.5 : 0.9
+    utterThis.rate = botId === "junko" ? 1.0 : botId === "alice" ? 0.9 : botId === "mark" ? 0.9 : 0.8
 
     synth.speak(utterThis);
 
