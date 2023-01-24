@@ -48,6 +48,9 @@ By doing so, you can also speak in Japanese and test your conversation skill.
 
 If the voice input will always be in English, it is not necessary to set it to the same language as the expected output reply. The `text completion` endpoint will take care of that.
 
+Please note that the voice data will be uploaded in `public/upload` and the output files of `Whisper` will be saved in the same directory. I am not sure if it is possible to disable this. So you might see exponential increase of the number of files here. 
+
+Anyway, there are other configuration options that you can use to make `whisper` more efficient in translating/transcribing the voice data. Please check `whisper --help`.
 
 # Text Completion
 
