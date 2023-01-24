@@ -1,0 +1,17 @@
+node_modules
+*.log*
+.nuxt
+.nitro
+.cache
+.output
+.env
+dist
+_bin
+*.bu.html
+*.bu.css
+*.bu.vue
+*.bu.svg
+*.bu.js
+*.bu.ts
+*.pem
+.DS_Store
