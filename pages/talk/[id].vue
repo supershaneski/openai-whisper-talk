@@ -4,7 +4,7 @@ import person from '../../assets/person-svgrepo-com.svg'
 import { capitalName } from '~~/lib/utils';
 
 const MAX_COUNT = 20
-const MIN_DECIBELS = -80 //-45
+const MIN_DECIBELS = -45 //-45
 
 const config = useRuntimeConfig()
 const route = useRoute()
