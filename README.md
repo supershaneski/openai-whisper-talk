@@ -5,10 +5,11 @@ openai-whisper-talk
 
 `openai-whisper-talk`は、WhisperやText completion endpointなど、OpenAIの技術を活用したサンプル音声会話アプリケーションです。このアプリケーションは、Vue.jsをベースにしたJavascriptフレームワークであるNuxtを使用して構築されています。
 
+
 # Objective
 
-This is a simple `proof of concept` application to demonstrate voice conversation between a human person and an AI.
-I am sure that anyone who have tinkered with the `OpenAI` tools would have probably came up with the same idea.
+This is a simple `proof of concept` application to demonstrate `voice chat` between a human person and an AI.
+I am sure that anyone who have tinkered with the `OpenAI` tools would have probably came up with the same idea, leveraging the different tools to create something interesting.
 
 This is part of the series of projects I created as code exercise to study `Vue 3` and `Nuxt 3`.
 There are lots of things I still need to learn so you might find some anti-pattern, etc. in the code.
@@ -17,6 +18,8 @@ There are lots of things I still need to learn so you might find some anti-patte
 # The App
 
 ![Screenshot](./docs/screenshot.png)
+
+The user interface is like a normal phone. You select an AI friend that you want to converse with. When you are finished, press the close button to go back to Home page.
 
 
 # Audio Capture
