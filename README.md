@@ -39,7 +39,7 @@ When recording is enabled and sound is not detected for `2 seconds`, the audio d
 
 Please note that transcribing time depends on the length of the audio data so it is possible that a new reply comes first before the old reply. To go around this limitation, at first I was thinking of setting the audio capture part like in `walkie-talkie` where you press a button to speak and wait for the reply after.
 
-I suggest to run this app with your `headphone` or `earphone` attached to the machine or device. This will prevent the app from hearing its own reply. Also, please do not talk for too long, just one sentence at a time.
+I suggest to run this app with your `headphone` or `earphone` attached to the machine or device. This will prevent the app from hearing its own reply. Also, please do not talk for too long, perhaps just one sentence at a time and pause a bit to allow time for transcription.
 
 
 # Whisper
@@ -133,7 +133,7 @@ Create `.env` file in the root directory and supply your own [OpenAI API Key](ht
 
 `.env` file
 ```javascript
-NUXT_API_KEY=my-openai-api-key-sample
+NUXT_OPENAI_API_KEY=my-openai-api-key-sample
 ```
 
 Then run the app
@@ -143,6 +143,7 @@ $ npm run dev
 ```
 
 Open your browser to `http://localhost:5000/` (port number depends on availability) to load the application page.
+
 
 ## Using HTTPS
 
