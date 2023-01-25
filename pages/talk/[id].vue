@@ -27,6 +27,8 @@ const reset = ref(true)
 const abortController = ref(null)
 const selectedPerson = ref(null)
 
+const startLoader = ref(false)
+
 let synth = null
 
 useHead({
@@ -196,9 +198,11 @@ async function speakMessage(msg) {
 
     utterThis.onstart = () => {
         console.log("[ start speech ]")
+        startLoader.value = true
     }
     utterThis.onend = () => {
         console.log("[ end speech ]")
+        startLoader.value = false
     }
 
     synth.speak(utterThis);
@@ -269,7 +273,12 @@ onBeforeUnmount(() => {
                 </div>
                 <p class="name">{{ route.params.id }}</p>
                 <p v-if="errorMessage" class="error">{{ `Error: ${errorMessage}` }}</p>
-                <p>{{ isRecording ? 'Recording...' : 'Not Recording' }}</p>
+                <div v-if="!errorMessage" class="loader-container">
+                    <div class="loader">
+                        <AnimatedBars :start="startLoader" />
+                    </div>
+                </div>
+                <p v-if="!errorMessage" class="record-text">{{ isRecording ? 'Recording' : 'Not Recording' }}</p>
             </div>
             <div class="action">
                 <ExitButton @click="handleClose" />
@@ -279,8 +288,22 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+.loader-container {
+    display: flex;
+    justify-content: center;
+}
+.loader {
+    position: relative;
+    width: 55px;
+}
 .error {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 0.7rem;
     color: #ff6767;
+}
+.record-text {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 0.7rem;
 }
 .icon {
     width: 120px;
