@@ -164,7 +164,7 @@ async function uploadFile(file) {
 
         if(response.hasOwnProperty('text')) {
         
-            //speakMessage(response.text)
+            speakMessage(response.text)
 
         }
 
