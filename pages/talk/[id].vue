@@ -4,7 +4,7 @@ import person from '../../assets/person-svgrepo-com.svg'
 import { capitalName } from '~~/lib/utils';
 
 const MAX_COUNT = 20
-const MIN_DECIBELS = -45 //-45
+const MIN_DECIBELS = -70 //-45
 
 const config = useRuntimeConfig()
 const route = useRoute()
@@ -22,6 +22,8 @@ const timer = ref(null)
 
 const audioFile = ref(null)
 const reset = ref(true)
+
+const abortController = ref(null)
 
 let synth = null
 
@@ -146,20 +148,28 @@ async function uploadFile(file) {
         reset.value = false
     }
 
-    const response = await $fetch("/api/transcribe", {
-        method: "POST",
-        headers: {
-            'Accept': 'application/json',
-        },
-        body: formData,
-    })
 
-    //const result = await response
+    try {
 
-    if(response.hasOwnProperty('text')) {
+        const response = await $fetch("/api/transcribe", {
+            method: "POST",
+            headers: {
+                'Accept': 'application/json',
+            },
+            body: formData,
+            signal: abortController.value.signal,
+        })
+
+        console.log("[ received response ]")
+
+        if(response.hasOwnProperty('text')) {
         
-        speakMessage(response.text)
+            //speakMessage(response.text)
 
+        }
+
+    } catch(err) {
+        console.log(err)
     }
 
 }
@@ -229,10 +239,13 @@ onMounted(() => {
 
     synth = window.speechSynthesis;
 
+    abortController.value = new AbortController()
+
 })
 
-
 onBeforeUnmount(() => {
+
+    abortController.value.abort()
 
     window.cancelAnimationFrame(animFrame.value)
 
