@@ -1,10 +1,9 @@
 <script setup>
-
 import person from '../../assets/person-svgrepo-com.svg'
-import { capitalName } from '~~/lib/utils';
+import contacts from '../../assets/contacts.json'
 
 const MAX_COUNT = 20
-const MIN_DECIBELS = -70 //-45
+const MIN_DECIBELS = -45
 
 const config = useRuntimeConfig()
 const route = useRoute()
@@ -24,11 +23,12 @@ const audioFile = ref(null)
 const reset = ref(true)
 
 const abortController = ref(null)
+const selectedPerson = ref(null)
 
 let synth = null
 
 useHead({
-  title: `${config.public.appTitle} - Talking to ${capitalName(route.params.id)}`,
+  title: `${config.public.appTitle} - Talking to ${route.params.id}`,
 })
 
 function handleClose() {
@@ -141,7 +141,7 @@ async function uploadFile(file) {
 
     let formData = new FormData()
     formData.append("file", file)
-    formData.append("name", capitalName(route.params.id))
+    formData.append("name", selectedPerson.value.name)
     
     if(reset.value === true) {
         formData.append("reset", reset)
@@ -182,23 +182,19 @@ async function speakMessage(msg) {
 
     const utterThis = new SpeechSynthesisUtterance(msg);
 
-    const botId = route.params.id
-    const name = botId === "junko" ? "Google 日本語" : botId === "alice" ? "Karen" : botId === "mark" ? "Google UK English Male" : "Daniel"
-
     const voices = synth.getVoices();
     for (const voice of voices) {
-        if (voice.name === name) {
+        if (voice.name === selectedPerson.value.voice.name) {
             utterThis.voice = voice;
         }
     }
     
-    utterThis.pitch = botId === "junko" ? 1.1 : botId === "alice" ? 1.3 : botId === "mark" ? 0.5 : 0.9
-    utterThis.rate = botId === "junko" ? 1.0 : botId === "alice" ? 0.9 : botId === "mark" ? 0.9 : 0.8
+    utterThis.pitch = selectedPerson.value.voice.pitch
+    utterThis.rate = selectedPerson.value.voice.rate
 
     synth.speak(utterThis);
 
 }
-
 
 watch(audioFile, (value) => {
 
@@ -240,6 +236,8 @@ onMounted(() => {
     synth = window.speechSynthesis;
 
     abortController.value = new AbortController()
+
+    selectedPerson.value = contacts.items.find(item => item.name.toLowerCase() === route.params.id.toLowerCase())
 
 })
 
@@ -288,7 +286,6 @@ onBeforeUnmount(() => {
     font-size: 2rem;
     color: var(--color-text-green);
 }
-
 .container {
     position: relative;
     height: 100vh;

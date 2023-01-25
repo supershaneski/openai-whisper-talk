@@ -1,13 +1,6 @@
 <script setup>
 import phone from '../assets/phone.svg'
-
-const friendList = ref([
-    { id: 'us4', name: 'Alice' },
-    { id: 'uk3', name: 'Daniel' },
-    { id: 'jp1', name: 'Junko', lang: '日本語' },
-    { id: 'us2', name: 'Mark' },
-])
-
+import contacts from '../assets/contacts.json'
 </script>
 
 <template>
@@ -17,9 +10,9 @@ const friendList = ref([
                 <img class="logo" :src="phone" alt="logo" />
             </div>
             <div class="list">
-                <NuxtLink v-for="person in friendList" :key="person.id" :to="`/talk/${person.name.toLowerCase()}`">
+                <NuxtLink v-for="person in contacts.items" :key="person.name" :to="`/talk/${person.name}`">
                     <div class="item">
-                        <span class="text">{{ person.name }}</span><span v-if="person.lang">&nbsp;({{ person.lang }})</span>
+                        <span class="text">{{ person.name }}</span><span v-if="person.lang">&nbsp;({{ person.lang === 'JP' ? '日本語' : person.lang }})</span>
                     </div>
                 </NuxtLink>
             </div>

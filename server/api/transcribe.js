@@ -3,7 +3,8 @@ import formidable from "formidable"
 import { exec } from 'child_process'
 import fs from "fs"
 import path from "path"
-import { formatData, setPromptInto } from "~~/lib/utils"
+import { formatData } from "../../lib/utils"
+import contacts from "../../assets/contacts.json"
 
 const configuration = new Configuration({
     apiKey: useRuntimeConfig().openaiApiKey,
@@ -13,11 +14,12 @@ const openai = new OpenAIApi(configuration)
 
 // simple server variable to persist 
 // this will be use to store previous conversation
+// it is probably better to use session variable
 let chatData = ''
 
 export default defineEventHandler(async (event) => {
 
-    let botName = ""
+    let selPerson = null
 
     const form = formidable({ multiples: true })
 
@@ -38,11 +40,13 @@ export default defineEventHandler(async (event) => {
 
             }
 
+            // resets previous conversation
             if(fields.reset) {
                 chatData = ''
             }
 
-            botName = fields.name || 'Daniel'
+            // selected AI bot
+            selPerson = contacts.items.find(item => item.name.toLowerCase() === fields.name.toLowerCase())
 
             if (files.file.mimetype.startsWith("application/octet-stream")) {
                 
@@ -82,7 +86,8 @@ export default defineEventHandler(async (event) => {
     const outputDir = path.join("public", "upload")
     const filename = `${outputDir}/${data.file}`
 
-    let sCommand = botName === "Junko" ? `whisper './${filename}' --language Japanese --task translate --model tiny --output_dir '${outputDir}'` : `whisper './${filename}' --language English --model tiny --output_dir '${outputDir}'`
+    const lang = selPerson.hasOwnProperty("lang") ? selPerson.lang : ""
+    let sCommand = lang === "JP" ? `whisper './${filename}' --language Japanese --task translate --model tiny --output_dir '${outputDir}'` : `whisper './${filename}' --language English --model tiny --output_dir '${outputDir}'`
     
     data = await new Promise((resolve, reject) => {
 
@@ -116,7 +121,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // set prompt introduction depending on botname
-    let prompt = setPromptInto(botName)
+    let prompt = selPerson.prompt
 
     chatData += '\n'
     chatData += `You: ${data.out}`
@@ -154,18 +159,18 @@ export default defineEventHandler(async (event) => {
     let reply = completion.data.choices[0].text
     if(reply.length > 0) {
         
-        if(reply.indexOf(botName) >= 0) {
+        if(reply.indexOf(selPerson.name) >= 0) {
             
-            let token = reply.split(`${botName}:`)
+            let token = reply.split(`${selPerson.name}:`)
             reply = token.length > 1 ? token[1].trim() : ''
 
             if(reply.length > 0) {
                 
                 chatData += `\n`
-                chatData += `${botName}: ${reply}`
+                chatData += `${selPerson.name}: ${reply}`
 
                 console.log("You:", data.out)
-                console.log(`${botName}:`, reply)
+                console.log(`${selPerson.name}:`, reply)
 
             }
 
