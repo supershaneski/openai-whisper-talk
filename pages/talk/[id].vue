@@ -1,9 +1,11 @@
 <script setup>
+import ExitButton from '~~/components/ExitButton.vue';
+
 import person from '../../assets/person-svgrepo-com.svg'
 import contacts from '../../assets/contacts.json'
 
 const MAX_COUNT = 20
-const MIN_DECIBELS = -45
+const MIN_DECIBELS = -45 //-45
 
 const config = useRuntimeConfig()
 const route = useRoute()
@@ -192,6 +194,13 @@ async function speakMessage(msg) {
     utterThis.pitch = selectedPerson.value.voice.pitch
     utterThis.rate = selectedPerson.value.voice.rate
 
+    utterThis.onstart = () => {
+        console.log("[ start speech ]")
+    }
+    utterThis.onend = () => {
+        console.log("[ end speech ]")
+    }
+
     synth.speak(utterThis);
 
 }
@@ -263,7 +272,7 @@ onBeforeUnmount(() => {
                 <p>{{ isRecording ? 'Recording...' : 'Not Recording' }}</p>
             </div>
             <div class="action">
-                <button @click="handleClose" class="button">Close</button>
+                <ExitButton @click="handleClose" />
             </div>
         </div>
     </div>
@@ -274,8 +283,8 @@ onBeforeUnmount(() => {
     color: #ff6767;
 }
 .icon {
-    width: 100px;
-    height: 100px;
+    width: 120px;
+    height: 120px;
     object-fit: cover;
     box-sizing: border-box;
     border: 1px solid var(--color-border-hover);
@@ -283,12 +292,13 @@ onBeforeUnmount(() => {
 }
 .name {
     text-transform: capitalize;
-    font-size: 2rem;
+    font-size: 1.5rem;
     color: var(--color-text-green);
 }
 .container {
     position: relative;
     height: 100vh;
+    min-height: 500px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -297,10 +307,13 @@ onBeforeUnmount(() => {
     position: relative;
     width: 100%;
     max-width: 414px;
+    height: 100%;
+    min-height: 500px;
 }
 .content {
     position: relative;
-    margin-bottom: 2rem;
+    height: 50%;
+    min-height: 250px;
     display: flex;
     justify-content: center;
     flex-direction: column;
@@ -312,17 +325,18 @@ onBeforeUnmount(() => {
 
 .action {
     position: relative;
+    height: 50%;
+    min-height: 250px;
     display: flex;
     justify-content: center;
+    align-items: center;
 }
-.button {
-    appearance: none;
-    font-size: 1rem;
-    width: 90%;
-    padding: 0.75rem;
-    border: 0;
-    border-radius: 3rem;
-    background-color: #ff6767;
-    color: #fff;
+
+@media (max-height: 400px) {
+    .icon {
+        width: 100px;
+        height: 100px;
+    }
 }
+
 </style>
