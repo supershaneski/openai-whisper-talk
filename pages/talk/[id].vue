@@ -1,5 +1,6 @@
 <script setup>
-import ExitButton from '~~/components/ExitButton.vue';
+import ExitButton from '~~/components/ExitButton.vue'
+import Avatar from '~~/components/Avatar.vue'
 
 import person from '../../assets/person-svgrepo-com.svg'
 import contacts from '../../assets/contacts.json'
@@ -268,8 +269,8 @@ onBeforeUnmount(() => {
     <div class="container">
         <div class="main">
             <div class="content">
-                <div class="avatar">
-                    <img class="icon" :src="person" alt="avatar" />
+                <div class="avatar-container">
+                    <Avatar class="avatar" color="#FFFFFF" />
                 </div>
                 <p class="name">{{ route.params.id }}</p>
                 <p v-if="errorMessage" class="error">{{ `Error: ${errorMessage}` }}</p>
@@ -288,6 +289,11 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+.avatar-container {
+    position: relative;
+    display: flex;
+    justify-content: center;
+}
 .loader-container {
     display: flex;
     justify-content: center;
@@ -355,11 +361,22 @@ onBeforeUnmount(() => {
     align-items: center;
 }
 
+.avatar {
+    border: 1px solid var(--color-border-hover);
+    background-color: #e6e6e6;
+    width: 120px;
+    width: 120px;
+}
 @media (max-height: 400px) {
-    .icon {
+    .avatar {
         width: 100px;
         height: 100px;
     }
 }
 
+@media (prefers-color-scheme: dark) {
+    .avatar {
+        background-color: #999999;
+    }
+}
 </style>
