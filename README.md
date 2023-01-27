@@ -11,7 +11,7 @@ openai-whisper-talk
 This is a `proof of concept` application to demonstrate `voice chat` between a human person and an AI.
 I am sure that anyone who have tinkered with the `OpenAI` tools would have probably came up with the same idea, leveraging the different tools to create something interesting.
 
-This is part of the series of projects I created as code exercise to study `Vue 3` and `Nuxt 3`. There are still lots of things I need to learn.
+This is part of the series of projects I created as code exercise to study `Vue 3` and `Nuxt 3`.
 
 
 # The App
