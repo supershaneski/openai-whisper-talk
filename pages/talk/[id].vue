@@ -2,7 +2,7 @@
 import ExitButton from '~~/components/ExitButton.vue'
 import Avatar from '~~/components/Avatar.vue'
 
-import person from '../../assets/person-svgrepo-com.svg'
+//import person from '../../assets/person-svgrepo-com.svg'
 import contacts from '../../assets/contacts.json'
 
 const MAX_COUNT = 20
@@ -142,8 +142,8 @@ async function handleStop() {
 
 async function uploadFile(file) {
 
-    console.log("[ upload file ]")
-
+    //console.log("upload data")
+    
     let formData = new FormData()
     formData.append("file", file)
     formData.append("name", selectedPerson.value.name)
@@ -164,8 +164,6 @@ async function uploadFile(file) {
             body: formData,
             signal: abortController.value.signal,
         })
-
-        console.log("[ received response ]")
 
         if(response.hasOwnProperty('text')) {
         
@@ -198,11 +196,9 @@ async function speakMessage(msg) {
     utterThis.rate = selectedPerson.value.voice.rate
 
     utterThis.onstart = () => {
-        console.log("[ start speech ]")
         startLoader.value = true
     }
     utterThis.onend = () => {
-        console.log("[ end speech ]")
         startLoader.value = false
     }
 
