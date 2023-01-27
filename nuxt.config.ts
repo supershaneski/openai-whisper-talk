@@ -11,7 +11,7 @@ export default defineNuxtConfig({
             ],
         }
     },
-    //modules: ["formidable"],
+    modules: ["formidable"],
     runtimeConfig: {
         openaiApiKey: '',
         public: {
