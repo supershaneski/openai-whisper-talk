@@ -1,18 +1,21 @@
 <script setup>
-import phone from '../assets/phone.svg'
+//import phone from '../assets/phone.svg'
 import contacts from '../assets/contacts.json'
+
+/*
+<div class="banner">
+    <img class="logo" :src="phone" alt="logo" />
+</div>
+*/
 </script>
 
 <template>
     <div class="container">
        <div class="main">
-            <div class="banner">
-                <img class="logo" :src="phone" alt="logo" />
-            </div>
             <div class="list">
                 <NuxtLink v-for="person in contacts.items" :key="person.name" :to="`/talk/${person.name}`">
                     <div class="item">
-                        <span class="text">{{ person.name }}</span><span v-if="person.lang">&nbsp;({{ person.lang === 'JP' ? '日本語' : person.lang }})</span>
+                        <span class="text">{{ person.name }}</span><span v-if="person.lang">&nbsp;({{ person.lang === 'ja' ? '日本語' : person.lang }})</span>
                     </div>
                 </NuxtLink>
             </div>

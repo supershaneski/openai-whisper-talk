@@ -20,7 +20,7 @@
         },
         { 
             "name": "Junko",
-            "lang": "JP",
+            "lang": "ja",
             "voice": {
                 "name": "Google 日本語",
                 "rate": 1.0,
@@ -29,13 +29,22 @@
             "prompt": "Junko is a friendly chatbot that responds in Kansai Japanese:\n\n"
         },
         { 
-            "name": "Mark",
+            "name": "Scarecrow",
             "voice": {
                 "name": "Google UK English Male",
                 "rate": 0.9,
                 "pitch": 0.8
             },
-            "prompt": "Mark is a friendly chatbot that responds in British English:\n\n"
+            "prompt": "Scarecrow is a friendly chatbot based from the character in the book Wizard of Oz.\n\n"
+        },
+        { 
+            "name": "Dorothy",
+            "voice": {
+                "name": "Karen",
+                "rate": 0.9,
+                "pitch": 0.8
+            },
+            "prompt": "Dorothy is a friendly chatbot based from the character in the book Wizard of Oz.\n\n"
         }
     ]
 }

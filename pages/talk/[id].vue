@@ -5,8 +5,8 @@ import Avatar from '~~/components/Avatar.vue'
 //import person from '../../assets/person-svgrepo-com.svg'
 import contacts from '../../assets/contacts.json'
 
-const MAX_COUNT = 20
-const MIN_DECIBELS = -45 //-45
+const MAX_COUNT = 35 //20 - 2s
+const MIN_DECIBELS = -70 //-45
 
 const config = useRuntimeConfig()
 const route = useRoute()
@@ -29,6 +29,8 @@ const abortController = ref(null)
 const selectedPerson = ref(null)
 
 const startLoader = ref(false)
+
+const messageInput = ref('')
 
 let synth = null
 
@@ -63,6 +65,7 @@ function checkAudioLevel(stream) {
     const audioContext = new AudioContext()
     const audioStreamSource = audioContext.createMediaStreamSource(stream)
     const analyser = audioContext.createAnalyser()
+    analyser.maxDecibels = -10
     analyser.minDecibels = MIN_DECIBELS
     audioStreamSource.connect(analyser)
 
@@ -136,6 +139,7 @@ async function handleStop() {
     const blob = new Blob(chunks.value, {type: 'audio/webm;codecs=opus'})
     chunks.value = []
 
+    // test
     audioFile.value = new File([blob], `file${Date.now()}.m4a`);
 
 }
@@ -149,10 +153,9 @@ async function uploadFile(file) {
     formData.append("name", selectedPerson.value.name)
     
     if(reset.value === true) {
-        formData.append("reset", reset)
+        formData.append("reset", reset.value)
         reset.value = false
     }
-
 
     try {
 
@@ -166,13 +169,55 @@ async function uploadFile(file) {
         })
 
         if(response.hasOwnProperty('text')) {
-        
-            speakMessage(response.text)
+            
+            if(response.text.length > 0) {
+                //speakMessage(response.text)
+            }
 
         }
 
     } catch(err) {
         console.log(err)
+    }
+
+}
+
+async function handleSend() {
+
+    try {
+
+        const message = messageInput.value
+
+        console.log('user', message, (new Date()).toLocaleTimeString())
+
+        messageInput.value = ''
+
+        const response = await $fetch("/api/transcribe", {
+            method: "POST",
+            headers: {
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({
+                name: selectedPerson.value.name,
+                message
+            }),
+            signal: abortController.value.signal,
+        })
+
+        //console.log('send', response)
+
+        if(response.status === 'ok' && response.text) {
+
+            console.log('chatbot', response.text)
+
+            //speakMessage(response.text)
+
+        }
+
+    } catch(error) {
+
+        console.log(error)
+
     }
 
 }
@@ -187,13 +232,14 @@ async function speakMessage(msg) {
 
     const voices = synth.getVoices();
     for (const voice of voices) {
-        if (voice.name === selectedPerson.value.voice.name) {
+        if (voice.name === 'Karen') { //selectedPerson.value.voice.name) {
             utterThis.voice = voice;
         }
     }
     
-    utterThis.pitch = selectedPerson.value.voice.pitch
-    utterThis.rate = selectedPerson.value.voice.rate
+    utterThis.rate = 0.9 //selectedPerson.value.voice.rate
+    utterThis.pitch = 1.3 //selectedPerson.value.voice.pitch
+    
 
     utterThis.onstart = () => {
         startLoader.value = true
@@ -259,15 +305,17 @@ onBeforeUnmount(() => {
 
 })
 
+/*
+<div class="avatar-container">
+                    <Avatar class="avatar" color="#FFFFFF" />
+                </div>
+*/
 </script>
 
 <template>
     <div class="container">
         <div class="main">
             <div class="content">
-                <div class="avatar-container">
-                    <Avatar class="avatar" color="#FFFFFF" />
-                </div>
                 <p class="name">{{ route.params.id }}</p>
                 <p v-if="errorMessage" class="error">{{ `Error: ${errorMessage}` }}</p>
                 <div v-if="!errorMessage" class="loader-container">
@@ -278,13 +326,43 @@ onBeforeUnmount(() => {
                 <p v-if="!errorMessage" class="record-text">{{ isRecording ? 'Recording' : 'Not Recording' }}</p>
             </div>
             <div class="action">
-                <ExitButton @click="handleClose" />
+                <div class="center">
+                    <div class="input">
+                        <input v-model="messageInput" placeholder="Send message" class="text-input" type="text" />
+                        <button :disabled="!messageInput" @click="handleSend" class="send-button">Send</button>
+                    </div>
+                    <ExitButton @click="handleClose" />
+                </div>
             </div>
         </div>
     </div>
 </template>
 
 <style scoped>
+.text-input {
+    font-size: .8rem;
+    padding: 5px 10px;
+    appearance: none;
+    border-width: 0;
+    /*border-top-left-radius: 12px;
+    border-bottom-left-radius: 12px;*/
+}
+.send-button {
+    appearance: none;
+    border-width: 0;
+    padding: 5px 10px;
+    font-size: .8rem;
+}
+.center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.input {
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+}
 .avatar-container {
     position: relative;
     display: flex;
@@ -329,6 +407,7 @@ onBeforeUnmount(() => {
     align-items: center;
 }
 .main {
+    /*background-color: #a25;*/
     position: relative;
     width: 100%;
     max-width: 414px;
@@ -336,6 +415,7 @@ onBeforeUnmount(() => {
     min-height: 500px;
 }
 .content {
+    /*border: 1px solid chartreuse;*/
     position: relative;
     height: 50%;
     min-height: 250px;
@@ -349,6 +429,7 @@ onBeforeUnmount(() => {
 }
 
 .action {
+    /*border: 1px solid pink;*/
     position: relative;
     height: 50%;
     min-height: 250px;
