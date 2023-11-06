@@ -1,12 +1,14 @@
 <script setup>
 import ExitButton from '~~/components/ExitButton.vue'
-import Avatar from '~~/components/Avatar.vue'
+import MicrophoneIcon from '../../components/MicrophoneIcon.vue'
+import MicrophoneOffIcon from '../../components/MicrophoneOffIcon.vue'
+import SendIcon from '../../components/SendIcon.vue'
+import AnimatedBars from '~~/components/AnimatedBars.vue'
 
-//import person from '../../assets/person-svgrepo-com.svg'
 import contacts from '../../assets/contacts.json'
 
-const MAX_COUNT = 35 //20 - 2s
-const MIN_DECIBELS = -70 //-45
+const MAX_COUNT = 35
+const MIN_DECIBELS = -70
 
 const config = useRuntimeConfig()
 const route = useRoute()
@@ -27,10 +29,16 @@ const reset = ref(true)
 
 const abortController = ref(null)
 const selectedPerson = ref(null)
+const languageStr = ref('')
 
 const startLoader = ref(false)
 
+const inputRef = ref(null)
 const messageInput = ref('')
+
+const startTimer = ref(false)
+const timerHandle = ref(null)
+const timerStr = ref('')
 
 let synth = null
 
@@ -139,15 +147,12 @@ async function handleStop() {
     const blob = new Blob(chunks.value, {type: 'audio/webm;codecs=opus'})
     chunks.value = []
 
-    // test
-    audioFile.value = new File([blob], `file${Date.now()}.m4a`);
+    //audioFile.value = new File([blob], `file${Date.now()}.m4a`);
 
 }
 
 async function uploadFile(file) {
 
-    //console.log("upload data")
-    
     let formData = new FormData()
     formData.append("file", file)
     formData.append("name", selectedPerson.value.name)
@@ -184,41 +189,71 @@ async function uploadFile(file) {
 
 async function handleSend() {
 
-    try {
+    const message = messageInput.value
 
-        const message = messageInput.value
+    let flagContinue = true
+    let func = null
 
-        console.log('user', message, (new Date()).toLocaleTimeString())
+    do {
 
-        messageInput.value = ''
-
-        const response = await $fetch("/api/transcribe", {
-            method: "POST",
-            headers: {
-                'Accept': 'application/json',
-            },
-            body: JSON.stringify({
+        try {
+            
+            let payload = {
                 name: selectedPerson.value.name,
-                message
-            }),
-            signal: abortController.value.signal,
-        })
+                message: message
+            }
+            
+            if(func) {
+                
+                payload.function = func
 
-        //console.log('send', response)
+            } else {
+                
+                if(reset.value === true) {
+                    payload.reset = true
+                    reset.value = false
+                }
 
-        if(response.status === 'ok' && response.text) {
+                messageInput.value = ''
 
-            console.log('chatbot', response.text)
+            }
 
-            //speakMessage(response.text)
+            const url = func ? '/api/function_call' : '/api/transcribe'
+
+            const response = await $fetch(url, {
+                method: "POST",
+                headers: {
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify(payload),
+                signal: abortController.value.signal,
+            })
+
+            if(response.status === 'ok' && response.output.content) {
+
+                speakMessage(response.output.content)
+
+            }
+
+            if(response.output.function_call) {
+
+                func = response.output
+
+            } else {
+
+                flagContinue = false
+
+            }
+
+        } catch(error) {
+
+            console.log(error.name, error.message)
+
+            flagContinue = false
 
         }
 
-    } catch(error) {
-
-        console.log(error)
-
-    }
+    } while(flagContinue)
 
 }
 
@@ -232,15 +267,14 @@ async function speakMessage(msg) {
 
     const voices = synth.getVoices();
     for (const voice of voices) {
-        if (voice.name === 'Karen') { //selectedPerson.value.voice.name) {
+        if (voice.name === selectedPerson.value.voice.name) {
             utterThis.voice = voice;
         }
     }
     
-    utterThis.rate = 0.9 //selectedPerson.value.voice.rate
-    utterThis.pitch = 1.3 //selectedPerson.value.voice.pitch
+    utterThis.rate = selectedPerson.value.voice.rate
+    utterThis.pitch = selectedPerson.value.voice.pitch
     
-
     utterThis.onstart = () => {
         startLoader.value = true
     }
@@ -276,7 +310,23 @@ watch(startCountdown, (value) => {
 
 })
 
+watch(startTimer, (newval) => {
+    if(newval) {
+
+        timerHandle.value = setInterval(() => {
+            timerStr.value = (new Date()).toLocaleTimeString()
+        }, 1000)
+
+    } else {
+        
+        clearInterval(timerHandle.value)
+
+    }
+})
+
 onMounted(() => {
+
+    startTimer.value = true
 
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
 
@@ -295,9 +345,23 @@ onMounted(() => {
 
     selectedPerson.value = contacts.items.find(item => item.name.toLowerCase() === route.params.id.toLowerCase())
 
+    if(!selectedPerson.value) {
+        
+        navigateTo("/")
+
+    } else {
+
+        languageStr.value = selectedPerson.value["lang-caption"]
+
+        inputRef.value.focus()
+
+    }
+
 })
 
 onBeforeUnmount(() => {
+
+    startTimer.value = false
 
     abortController.value.abort()
 
@@ -305,32 +369,41 @@ onBeforeUnmount(() => {
 
 })
 
-/*
-<div class="avatar-container">
-                    <Avatar class="avatar" color="#FFFFFF" />
-                </div>
-*/
 </script>
 
 <template>
     <div class="container">
         <div class="main">
             <div class="content">
-                <p class="name">{{ route.params.id }}</p>
-                <p v-if="errorMessage" class="error">{{ `Error: ${errorMessage}` }}</p>
-                <div v-if="!errorMessage" class="loader-container">
+                <div class="name">{{ route.params.id }}</div>
+                <div v-if="selectedPerson" class="language">{{ languageStr }}</div>
+                <div class="loader-container">
                     <div class="loader">
                         <AnimatedBars :start="startLoader" />
                     </div>
                 </div>
-                <p v-if="!errorMessage" class="record-text">{{ isRecording ? 'Recording' : 'Not Recording' }}</p>
+                <div class="time-container">{{ timerStr }}</div>
+            </div>
+            <div class="mode">
+                <div class="voice-input">
+                    <div v-if="!errorMessage" :class="{recordON: isRecording}" class="voice-icon-container">
+                        <MicrophoneIcon class="voice-icon" />
+                    </div>
+                    <div v-if="errorMessage" class="voice-icon-container">
+                        <MicrophoneOffIcon class="voice-icon" />
+                    </div>
+                </div>
+                <div class="message-input">
+                    <div class="input">
+                        <input ref="inputRef" v-model="messageInput" placeholder="Send message" class="text-input" type="text" />
+                        <button :disabled="!messageInput" @click="handleSend" class="send-button">
+                            <SendIcon class="send-icon" />
+                        </button>
+                    </div>
+                </div>
             </div>
             <div class="action">
                 <div class="center">
-                    <div class="input">
-                        <input v-model="messageInput" placeholder="Send message" class="text-input" type="text" />
-                        <button :disabled="!messageInput" @click="handleSend" class="send-button">Send</button>
-                    </div>
                     <ExitButton @click="handleClose" />
                 </div>
             </div>
@@ -339,64 +412,111 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+.message-input {
+    position: relative;
+}
+.input {
+    position: relative;
+    width: 100%;
+}
+.voice-input {
+    position: relative;
+    margin-bottom: 5rem;
+    display: flex;
+    justify-content: center;
+}
+.voice-icon-container {
+    border-width: calc(1px + .5vmin);
+    border-style: solid;
+    border-color: #e6e6e6;
+    border-radius: 50%;
+    padding: 10px;
+    width: calc(20px + 10vmin);
+    height: calc(20px + 10vmin);
+    box-sizing: border-box;
+    transition: border .3s ease-in-out;
+}
+.voice-icon {
+    fill: #e6e6e6;
+    transition: border .3s ease-in-out;
+}
+.recordON {
+    border-color: #00DC82;
+}
+.recordON .voice-icon{
+    fill: #00DC82;
+}
+
 .text-input {
-    font-size: .8rem;
-    padding: 5px 10px;
+    font-size: calc(4px + 2vmin);
+    padding: 8px 36px 8px 12px;
     appearance: none;
-    border-width: 0;
-    /*border-top-left-radius: 12px;
-    border-bottom-left-radius: 12px;*/
+    border-width: 1px;
+    border-style: solid;
+    border-color: #dcdcdc;
+    border-radius: 16px;
+    background-color: transparent;
+    width: 100%;
+    outline: none;
+    color: #333;
+}
+.text-input::placeholder {
+    color: #bbb;
+}
+.text-input:focus {
+    border-color: #555;
 }
 .send-button {
+    background-color: transparent;
+    color: #fff;
     appearance: none;
     border-width: 0;
-    padding: 5px 10px;
-    font-size: .8rem;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    padding: 3px;
+    position: absolute;
+    right: 8px;
+    cursor: pointer;
 }
+.send-button .send-icon {
+    fill: #555;
+}
+.send-button:disabled .send-icon {
+    fill: #dcdcdc;
+}
+
 .center {
     display: flex;
     flex-direction: column;
     align-items: center;
 }
 .input {
-    margin-bottom: 1rem;
     display: flex;
     align-items: center;
 }
-.avatar-container {
-    position: relative;
-    display: flex;
-    justify-content: center;
-}
 .loader-container {
+    margin-top: 1rem;
     display: flex;
     justify-content: center;
 }
 .loader {
     position: relative;
-    width: 55px;
+    width: 80px;
 }
-.error {
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: 0.7rem;
-    color: #ff6767;
-}
-.record-text {
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: 0.7rem;
-}
-.icon {
-    width: 120px;
-    height: 120px;
-    object-fit: cover;
-    box-sizing: border-box;
-    border: 1px solid var(--color-border-hover);
-    border-radius: 50%;
-}
+
 .name {
     text-transform: capitalize;
-    font-size: 1.5rem;
+    font-size: calc(10px + 6vmin); /*1.5rem;*/
     color: var(--color-text-green);
+    margin: 0;
+    padding: 0;
+    line-height: 120%;
+}
+.language {
+    margin: 0;
+    padding: 0;
+    font-size: calc(2px + 3vmin);
 }
 .container {
     position: relative;
@@ -407,7 +527,6 @@ onBeforeUnmount(() => {
     align-items: center;
 }
 .main {
-    /*background-color: #a25;*/
     position: relative;
     width: 100%;
     max-width: 414px;
@@ -415,45 +534,61 @@ onBeforeUnmount(() => {
     min-height: 500px;
 }
 .content {
-    /*border: 1px solid chartreuse;*/
     position: relative;
-    height: 50%;
+    height: 40%;
     min-height: 250px;
     display: flex;
     justify-content: center;
     flex-direction: column;
     text-align: center;
-} 
-.content p {
-    margin: 0.1rem;
 }
-
-.action {
-    /*border: 1px solid pink;*/
+.mode {
     position: relative;
-    height: 50%;
+    height: 40%;
     min-height: 250px;
+}
+.action {
+    position: relative;
+    height: 20%;
+    min-height: 100px;
     display: flex;
     justify-content: center;
-    align-items: center;
-}
-
-.avatar {
-    border: 1px solid var(--color-border-hover);
-    background-color: #e6e6e6;
-    width: 120px;
-    width: 120px;
-}
-@media (max-height: 400px) {
-    .avatar {
-        width: 100px;
-        height: 100px;
-    }
+    align-items: flex-start;
 }
 
 @media (prefers-color-scheme: dark) {
-    .avatar {
-        background-color: #999999;
+    .voice-icon-container {
+        border-color: #555;
+    }
+    .voice-icon {
+        fill: #555;
+    }
+    .recordON {
+        border-color: #00DC82;
+    }
+    .recordON .voice-icon{
+        fill: #00DC82;
+    }
+
+    .text-input {
+        border-color: #999;
+        color: #fff;
+    }
+    .text-input::placeholder {
+        color: #777;
+    }
+    .text-input:focus {
+        border-color: #fff;
+    }
+
+    .send-button {
+        color: #fff;
+    }
+    .send-button .send-icon {
+        fill: #fff;
+    }
+    .send-button:disabled .send-icon {
+        fill: #555;
     }
 }
 </style>

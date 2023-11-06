@@ -1,0 +1,17 @@
+{
+    "name": "get_info_from_memory",
+    "description": "Retrieve information from memory based from search words",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "search": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                },
+                "description": "The search words"
+            }
+        },
+        "required": [ "search"  ]
+    }
+}

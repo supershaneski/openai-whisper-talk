@@ -10,7 +10,7 @@ watch(isStarto, (value) => {
     if(value) {
         timer.value = setInterval(() => {
             items.value = items.value.map((item, i) => {
-                return 1 + Math.round(15 * Math.random())
+                return 1 + Math.round(20 * Math.random())
             })
         }, 100)
     } else {
@@ -35,7 +35,7 @@ watch(isStarto, (value) => {
 .loading-bars {
     position: relative;
     width: 100%;
-    height: 20px;
+    height: 40px; /* 20px */
     display: flex;
     justify-content: space-evenly;
     align-items: center;
@@ -43,7 +43,7 @@ watch(isStarto, (value) => {
 }
 .bar-item {
     background-color: #FFA967; /*#FFD167;*/ /*#FFA967;*/ /*hsla(160, 100%, 37%, 1);*/
-    border-radius: 1px;
+    border-radius: 12px;
     position: relative;
     width: calc((100% - 9px)/8);
     flex-grow: 0;

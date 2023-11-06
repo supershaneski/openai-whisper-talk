@@ -1,0 +1,14 @@
+{
+    "name": "get_calendar_entry",
+    "description": "Get calendar entry by given search word",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "date": {
+                "type": "string",
+                "description": "Date of the event in 'YYYY-MM-DD' format"
+            }
+        },
+        "required": [ "date" ]
+    }
+}

@@ -1,0 +1,26 @@
+{
+    "name": "edit_calendar_entry",
+    "description": "Edits or updates entry to the calendar",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "event": {
+                "type": "string",
+                "description": "The name or title of the event"
+            },
+            "date": {
+                "type": "string",
+                "description": "The date of the event in 'YYYY-MM-DD' format"
+            },
+            "time": {
+                "type": "string",
+                "description": "The time of the event in 'HH:MM' format"
+            },
+            "additional_detail": {
+                "type": "string",
+                "description": "Any additional details or notes related to the event"
+            }
+        },
+        "required": [ "event", "date", "time", "additional_detail" ]
+    }
+}

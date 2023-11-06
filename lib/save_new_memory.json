@@ -1,0 +1,29 @@
+{
+    "name": "save_new_memory",
+    "description": "Saves a new piece of information as a memory",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "memory_title": {
+                "type": "string",
+                "description": "The title or brief description of the memory"
+            },
+            "memory_detail": {
+                "type": "string",
+                "description": "The detailed information of the memory"
+            },
+            "memory_date": {
+                "type": "string",
+                "description": "The date when the memory was created in 'YYYY-MM-DD' format"
+            },
+            "memory_tags": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                },
+                "description": "Any tags or keywords associated with the memory"
+            }
+        },
+        "required": [ "memory_title", "memory_detail"  ]
+    }
+}

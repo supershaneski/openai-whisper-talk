@@ -1,6 +1,7 @@
 {
   "name": "openai-whisper-talk",
-  "version": "0.0.1",
+  "version": "0.0.2",
+  "description": "A voice conversation app powered by OpenAI technologies",
   "private": true,
   "scripts": {
     "dev": "nuxt dev --host '0' --port 5000",
@@ -12,8 +13,11 @@
   "devDependencies": {
     "nuxt": "^3.0.0"
   },
+  "author": "supershaneski",
+  "license": "MIT",
   "dependencies": {
     "formidable": "^2.1.1",
+    "mongoose": "^8.0.0",
     "openai": "^4.14.0"
   }
 }

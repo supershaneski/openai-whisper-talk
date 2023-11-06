@@ -1,0 +1,29 @@
+{
+    "name": "delete_calendar_entry",
+    "description": "Delete an entry from the calendar",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "delete_type": {
+                "type": "string",
+                "description": "User can delete either by 'event_name' or by 'event_date'",
+                "enum": [
+                    "event_name",
+                    "event_date"
+                ]
+            },
+            "event": {
+                "type": "string",
+                "description": "The name or title of the event",
+                "minLength": 1,
+                "maxLength": 100
+            },
+            "date": {
+                "type": "string",
+                "description": "The date of the event in 'YYYY-MM-DD' format",
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            }
+        },
+        "required": [ "delete_type" ]
+    }
+}

@@ -13,6 +13,9 @@ export default defineNuxtConfig({
     },
     modules: ["formidable"],
     runtimeConfig: {
+        mongodbHostName: '',
+        mongodbPort: '',
+        mongodbDbName: '',
         openaiApiKey: '',
         public: {
             appTitle: 'Whisper Talk'
