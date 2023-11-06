@@ -3,7 +3,7 @@ import { exec } from 'child_process'
 import fs from 'fs'
 import path from 'path'
 
-import { chat } from '../../services/openai'
+import { chat, whisper } from '../../services/openai'
 import MongoDB from '~~/services/mongodb'
 
 import { trim_array } from '../../lib/utils'
@@ -96,7 +96,6 @@ export default defineEventHandler(async (event) => {
 
     let user_message = data.text ? data.text : ''
 
-    /* ### BEGIN WHISPER ### */
     if(data.file) {
 
         const outputDir = path.join("public", "upload")
@@ -106,7 +105,6 @@ export default defineEventHandler(async (event) => {
         // remove silence
         const retval = await new Promise((resolve, reject) => {
 
-            //const sCommand = `ffmpeg -i "${filename}" -f segment -segment_time 120 -c copy ${outFile}`
             const sCommand = `ffmpeg -i ${filename} -af silenceremove=stop_periods=-1:stop_duration=1:stop_threshold=-50dB ${outFile}`
     
             exec(sCommand, (error, stdout, stderr) => {
@@ -137,11 +135,7 @@ export default defineEventHandler(async (event) => {
             sfilename = outFile
         }
 
-        //////////
-
-        // Check file size
         let sizeKB = 0
-        let sizeKB2 = 0
 
         try {
             
@@ -149,29 +143,14 @@ export default defineEventHandler(async (event) => {
             const fileSizeInBytes = stats.size
             sizeKB = fileSizeInBytes / 1024
 
-            if(sfilename !== filename) {
-
-                const stats2 = fs.statSync(filename)
-                const fileSizeInBytes2 = stats2.size
-                sizeKB2 = fileSizeInBytes2 / 1024
-
-            }
-
         } catch (err) {
             
             console.error(err.name, err.message)
 
         }
 
-        // Do not send to whisper if less than 100KB
-        const testFlag = false
-
-        console.log("Size (KB)", sfilename, sizeKB, (new Date()).toLocaleTimeString())
-        if(sizeKB2 > 0) {
-            console.log("Size2 (KB)", filename, sizeKB2)
-        }
-
-        if(testFlag || sizeKB < 16) {
+        // Do not send to whisper if less than 16KB
+        if(sizeKB < 16) {
 
             return {
                 status: 'error'
@@ -179,27 +158,15 @@ export default defineEventHandler(async (event) => {
 
         }
         
-        //////////
-
         const lang = selPerson.hasOwnProperty("lang") && selPerson.lang ? selPerson.lang : "en"
     
-        //const whisper_prompt = `Umm, the transcript is like, about someone talking over the phone, to their friend, hmmm.`
-
-        ////// WHISPER-API //////
-        const transcription = ''
-        /*
-        const transcription = await openai.audio.transcriptions.create({
+        const transcription = await whisper({
             file: fs.createReadStream(sfilename),
-            model: "whisper-1",
             language: lang,
             response_format: 'text',
             temperature: 0,
-            //prompt: whisper_prompt,
         })
-        */
 
-        console.log('whisper-transcript', transcription.length, transcription)
-        
         if(transcription.trim().length === 0) {
 
             return {
@@ -211,7 +178,6 @@ export default defineEventHandler(async (event) => {
         user_message = transcription
 
     }
-    /* ### END WHISPER ### */
 
     if(user_message.trim().length === 0) {
 
@@ -220,6 +186,8 @@ export default defineEventHandler(async (event) => {
         }
 
     }
+
+    console.log('user', user_message)
 
     const today = new Date()
 
@@ -294,6 +262,8 @@ export default defineEventHandler(async (event) => {
         })
 
         result_message = result.message
+
+        console.log('assistant', result_message)
         
         if(result.message.content) {
 

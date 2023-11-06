@@ -42,7 +42,6 @@ export default defineEventHandler(async (event) => {
                 resolve({
                     status: "ok",
                     function: { content: null, role: 'assistant', function_call: fields.function.function_call }, // strip message
-                    message: fields.message,
                 })
 
             } else {
@@ -66,7 +65,6 @@ export default defineEventHandler(async (event) => {
     }
 
     let function_return = data.function
-    let user_message = data.message
 
     let function_name = function_return.function_call.name
     let function_args = JSON.parse(function_return.function_call.arguments)
@@ -180,6 +178,8 @@ export default defineEventHandler(async (event) => {
 
     }
 
+    console.log("api-output", api_output)
+
     const today = new Date()
 
     let system_prompt = `In this session, we will simulate a voice conversation between two friends.\n\n` +
@@ -253,7 +253,9 @@ export default defineEventHandler(async (event) => {
         })
 
         result_message = result.message
-    
+        
+        console.log('assistant', result_message)
+
         if(result.message.content) {
     
             const new_botmessage = { uid: selPerson.id, role: 'assistant', content: result.message.content }

@@ -94,7 +94,7 @@ function checkAudioLevel(stream) {
         
         if(soundDetected === true) {
 
-            if(isRecording.value === false) {
+            if(isRecording.value === false && startLoader.value === false) {
                 startCountdown.value = false
                 isRecording.value = true
 
@@ -147,43 +147,68 @@ async function handleStop() {
     const blob = new Blob(chunks.value, {type: 'audio/webm;codecs=opus'})
     chunks.value = []
 
-    //audioFile.value = new File([blob], `file${Date.now()}.m4a`);
+    audioFile.value = new File([blob], `file${Date.now()}.m4a`);
 
 }
 
 async function uploadFile(file) {
 
-    let formData = new FormData()
-    formData.append("file", file)
-    formData.append("name", selectedPerson.value.name)
-    
-    if(reset.value === true) {
-        formData.append("reset", reset.value)
-        reset.value = false
-    }
+    let flagContinue = true
+    let func = null
 
-    try {
+    do {
 
-        const response = await $fetch("/api/transcribe", {
-            method: "POST",
-            headers: {
-                'Accept': 'application/json',
-            },
-            body: formData,
-            signal: abortController.value.signal,
-        })
-
-        if(response.hasOwnProperty('text')) {
+        try {
             
-            if(response.text.length > 0) {
-                //speakMessage(response.text)
+            let formData = new FormData()
+            formData.append("name", selectedPerson.value.name)
+            
+            if(func) {
+                
+                formData.append("function", func)
+
+            } else {
+
+                formData.append("file", file)
+
             }
+
+            const url = func ? '/api/function_call' : '/api/transcribe'
+
+            const response = await $fetch(url, {
+                method: "POST",
+                headers: {
+                    'Accept': 'application/json',
+                },
+                body: formData,
+                signal: abortController.value.signal,
+            })
+
+            if(response.status === 'ok' && response.output.content) {
+
+                speakMessage(response.output.content)
+
+            }
+
+            if(response.output.function_call) {
+
+                func = response.output
+
+            } else {
+
+                flagContinue = false
+
+            }
+
+        } catch(error) {
+
+            console.log(error.name, error.message)
+
+            flagContinue = false
 
         }
 
-    } catch(err) {
-        console.log(err)
-    }
+    } while(flagContinue)
 
 }
 
