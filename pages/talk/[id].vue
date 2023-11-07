@@ -31,14 +31,11 @@ const abortController = ref(null)
 const selectedPerson = ref(null)
 const languageStr = ref('')
 
+const audioDomRef = ref(null)
 const startLoader = ref(false)
 
 const inputRef = ref(null)
 const messageInput = ref('')
-
-const startTimer = ref(false)
-const timerHandle = ref(null)
-const timerStr = ref('')
 
 let synth = null
 
@@ -147,7 +144,7 @@ async function handleStop() {
     const blob = new Blob(chunks.value, {type: 'audio/webm;codecs=opus'})
     chunks.value = []
 
-    audioFile.value = new File([blob], `file${Date.now()}.m4a`);
+    //audioFile.value = new File([blob], `file${Date.now()}.m4a`);
 
 }
 
@@ -230,7 +227,7 @@ async function handleSend() {
             
             if(func) {
                 
-                payload.function = func
+                payload.tools = func
 
             } else {
                 
@@ -254,13 +251,16 @@ async function handleSend() {
                 signal: abortController.value.signal,
             })
 
-            if(response.status === 'ok' && response.output.content) {
+            if(response.status === 'ok' && response.file) {
 
-                speakMessage(response.output.content)
+                audioDomRef.value.src = response.file
 
             }
 
-            if(response.output.function_call) {
+            console.log("response", response)
+
+            //if(response.output.function_call) {
+            if(response.output.tool_calls) {
 
                 func = response.output
 
@@ -311,6 +311,56 @@ async function speakMessage(msg) {
 
 }
 
+function getAudioDuration() {
+
+    console.log("get audio duration")
+
+    audioDomRef.value.currentTime = 0
+    audioDomRef.value.removeEventListener('timeupdate', getDuration)
+
+    if(audioDomRef.value.duration === Infinity) {
+        console.log("audio infinity error")
+        startLoader.value = false
+        return
+    }
+
+    audioDomRef.value.play()
+    startLoader.value = true
+
+}
+
+function handleAudioLoad() {
+    
+    if(audioDomRef.value.duration === Infinity) {
+
+        console.log("audio infinity 1")
+
+        audioDomRef.value.currentTime = 1e101
+        audioDomRef.value.addEventListener('timeupdate', getAudioDuration)
+
+    } else {
+
+        console.log("audio started 1")
+
+        audioDomRef.value.play()
+        startLoader.value = true
+
+    }
+
+}
+
+function handleAudioEnded() {
+
+    console.log("audio ended")
+
+    startLoader.value = false
+}
+
+function handleAudioError() {
+    console.log("Audio error")
+    startLoader.value = false
+}
+
 watch(audioFile, (value) => {
 
     uploadFile(value)
@@ -335,23 +385,7 @@ watch(startCountdown, (value) => {
 
 })
 
-watch(startTimer, (newval) => {
-    if(newval) {
-
-        timerHandle.value = setInterval(() => {
-            timerStr.value = (new Date()).toLocaleTimeString()
-        }, 1000)
-
-    } else {
-        
-        clearInterval(timerHandle.value)
-
-    }
-})
-
 onMounted(() => {
-
-    startTimer.value = true
 
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
 
@@ -364,7 +398,7 @@ onMounted(() => {
         
     }
 
-    synth = window.speechSynthesis;
+    //synth = window.speechSynthesis;
 
     abortController.value = new AbortController()
 
@@ -380,13 +414,17 @@ onMounted(() => {
 
         inputRef.value.focus()
 
+        audioDomRef.value = new Audio()
+        audioDomRef.value.type = 'audio/mpeg'
+        audioDomRef.value.addEventListener('loadedmetadata', handleAudioLoad)
+        audioDomRef.value.addEventListener('ended', handleAudioEnded)
+        audioDomRef.value.addEventListener('error', handleAudioError)
+
     }
 
 })
 
 onBeforeUnmount(() => {
-
-    startTimer.value = false
 
     abortController.value.abort()
 
@@ -407,7 +445,6 @@ onBeforeUnmount(() => {
                         <AnimatedBars :start="startLoader" />
                     </div>
                 </div>
-                <div class="time-container">{{ timerStr }}</div>
             </div>
             <div class="mode">
                 <div class="voice-input">

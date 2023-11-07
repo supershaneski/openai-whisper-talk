@@ -8,6 +8,7 @@ node_modules
 dist
 _bin
 public/upload/*.m4a
+public/upload/*.mp3
 *.bu.json
 *.bu.html
 *.bu.css

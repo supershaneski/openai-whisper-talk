@@ -1,4 +1,5 @@
 import OpenAI from 'openai'
+import fs from 'fs'
 
 const openai = new OpenAI({
     apiKey: useRuntimeConfig().openaiApiKey,
@@ -32,10 +33,11 @@ export async function embedding({
 }
 
 export async function chat({
-    model = 'gpt-3.5-turbo-0613',
+    model = 'gpt-3.5-turbo-1106', //'gpt-3.5-turbo-0613',
     max_tokens = 1024,
     temperature = 0,
     messages,
+    tools,
     functions,
     function_call = 'auto',
 }) {
@@ -52,9 +54,17 @@ export async function chat({
     
     }
 
+    if(tools) {
+
+        options.tools = tools
+
+    }
+
     try {
 
         const result = await openai.chat.completions.create(options)
+
+        console.log('chat', result)
 
         return result.choices[0]
 
@@ -97,4 +107,32 @@ export async function whisper({
         throw error
         
     }
+}
+
+export async function speech({
+    model = 'tts-1',
+    voice = 'alloy',
+    input,
+    filename,
+}) {
+
+    try {
+
+        const mp3 = await openai.audio.speech.create({
+            model,
+            voice,
+            input,
+        })
+
+        const buffer = Buffer.from(await mp3.arrayBuffer());
+        await fs.promises.writeFile(filename, buffer);
+
+    } catch(error) {
+
+        console.log(error.name, error.message)
+
+        throw error
+
+    }
+
 }

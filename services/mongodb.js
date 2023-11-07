@@ -80,8 +80,19 @@ export default class MongoDB {
 
         const newCalEntry = new this.CalendarEntry(calEntry)
 
+        const exist_entry = await this.CalendarEntry.find({
+            event: newCalEntry.event,
+            date: newCalEntry.date,
+            time: newCalEntry.time,
+        })
+
+        if(exist_entry.length > 0) {
+            return { status: 'error' }
+        }
+
         await newCalEntry.save()
 
+        return { status: 'ok' }
     }
 
     async getCalendarEntryByDate(date) {

@@ -3,7 +3,7 @@ import { exec } from 'child_process'
 import fs from 'fs'
 import path from 'path'
 
-import { chat, whisper } from '../../services/openai'
+import { chat, whisper, speech } from '../../services/openai'
 import MongoDB from '~~/services/mongodb'
 
 import { trim_array } from '../../lib/utils'
@@ -187,8 +187,6 @@ export default defineEventHandler(async (event) => {
 
     }
 
-    console.log('user', user_message)
-
     const today = new Date()
 
     let system_prompt = `In this session, we will simulate a voice conversation between two friends.\n\n` +
@@ -239,36 +237,53 @@ export default defineEventHandler(async (event) => {
 
     }
 
+    console.log('user', user_message, (new Date()).toLocaleTimeString())
+
     const new_usermessage = { uid: selPerson.id, role: 'user', content: user_message }
     await mongoDb.addMessage(new_usermessage)
 
     messages.push({ role: new_usermessage.role, content: new_usermessage.content })
 
     let result_message = null
+    let result_file = null
 
     try {
         
         let result = await chat({
             temperature: 0.3,
             messages,
-            functions: [
-                add_calendar_entry, 
-                get_calendar_entry, 
-                edit_calendar_entry, 
-                delete_calendar_entry,
-                save_new_memory,
-                get_info_from_memory
+            tools: [
+                { type: 'function', function: add_calendar_entry },
+                { type: 'function', function: get_calendar_entry },
+                { type: 'function', function: edit_calendar_entry },
+                { type: 'function', function: delete_calendar_entry },
+                { type: 'function', function: save_new_memory },
+                { type: 'function', function: get_info_from_memory }
             ]
         })
+        
 
         result_message = result.message
 
-        console.log('assistant', result_message)
+        console.log('assistant1', result_message)
         
         if(result.message.content) {
 
             const new_botmessage = { uid: selPerson.id, role: 'assistant', content: result.message.content }
             await mongoDb.addMessage(new_botmessage)
+
+            let filename = 'voice' + Date.now() + Math.round(Math.random() * 100000) + '.mp3'
+            const audioFile = path.join('public', 'upload', filename)
+
+            let text_speak = result.message.content.replace(/\n/g, '')
+
+            await speech({
+                voice: selPerson.voice.name2 || 'alloy',
+                input: text_speak,
+                filename: audioFile,
+            })
+
+            result_file = `/upload/${filename}`
 
         }
 
@@ -280,7 +295,8 @@ export default defineEventHandler(async (event) => {
     
     return {
         status: "ok",
-        output: result_message
+        output: result_message,
+        file: result_file,
     }
 
 })
