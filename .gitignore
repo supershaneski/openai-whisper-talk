@@ -16,5 +16,6 @@ public/upload/*.mp3
 *.bu.svg
 *.bu.js
 *.bu.ts
+*.bu.md
 *.pem
 .DS_Store
