@@ -7,8 +7,8 @@ import AnimatedBars from '~~/components/AnimatedBars.vue'
 
 import contacts from '../../assets/contacts.json'
 
-const MAX_COUNT = 35
-const MIN_DECIBELS = -70
+const MAX_COUNT = 3500
+const MIN_DECIBELS = -45
 
 const config = useRuntimeConfig()
 const route = useRoute()
@@ -377,7 +377,7 @@ watch(startCountdown, (value) => {
 
         timer.value = setInterval(() => {
             
-            count.value++
+            count.value += 100
 
         }, 100)
 

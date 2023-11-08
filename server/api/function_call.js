@@ -67,7 +67,7 @@ export default defineEventHandler(async (event) => {
 
     }
 
-    console.log("data-response", data.response)
+    console.log("data-response", data.response.tool_calls)
 
     let function_return = data.response
     let api_outputs = []

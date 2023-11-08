@@ -1,125 +1,289 @@
 openai-whisper-talk
 ==========
 
-`openai-whisper-talk` is a sample `voice conversation` application powered by [OpenAI](https://openai.com) technology such as [Whisper](https://openai.com/blog/whisper/), an automatic speech recognition (ASR) system, and [Text completion endpoint](https://beta.openai.com/docs/guides/completion/introduction), an interface to generate or manipulate text. The application is built using [Nuxt](https://nuxt.com/docs/getting-started/introduction), a Javascript framework based on [Vue.js](https://vuejs.org/guide/introduction.html).
+v0.0.2
 
-`openai-whisper-talk`は、`Whisper`や`Text completion endpoint`など、`OpenAI`の技術を活用したサンプル音声会話アプリケーションです。このアプリケーションは、`Vue.js`をベースにしたJavascriptフレームワークである`Nuxt`を使用して構築されています。
+**openai-whisper-talk** is a sample voice conversation application powered by **OpenAI** technologies such as [Whisper](https://platform.openai.com/docs/guides/speech-to-text), an automatic speech recognition (ASR) system, [Chat Completions](https://platform.openai.com/docs/guides/text-generation/chat-completions-api), an interface that simulates conversation with a model that plays the role of assistant, [Embeddings](https://platform.openai.com/docs/guides/embeddings/what-are-embeddings), converts text to vector data that can be used in tasks like semantic searching, and the latest [Text-to-Speech](https://platform.openai.com/docs/guides/text-to-speech), that turn text ito lifelike spoken audio. The application is built using [Nuxt](https://nuxt.com/docs/getting-started/introduction), a Javascript framework based on [Vue.js](https://vuejs.org/guide/introduction.html).
 
+The application has two new features: [Schedule Management](#schedule-management) and [Long-Term Memory](#long-term-memory). With Schedule Management, you can command the chatbot to add, modify, delete, and retrieve scheduled events. The Long-Term Memory feature allows you to store snippets of information that the chatbot will remember for future reference. You can seamlessly integrate both functions into your conversations simply by interacting with the chatbot. Perhaps in the future, with the addition of a few more enhancements, such as email or messaging capabilities, it can become a full-fledged personal assistant.
 
-# Objective
+---
 
-This is a `proof of concept` application to demonstrate `voice chat` between a human person and an AI.
-I am sure that anyone who have tinkered with the `OpenAI` tools would have probably came up with the same idea, leveraging the different tools to create something interesting.
+**openai-whisper-talk**は、[Whisper](https://platform.openai.com/docs/guides/speech-to-text)（自動音声認識（ASR）システム）、[Chat completions](https://platform.openai.com/docs/guides/text-generation/chat-completions-api)（アシスタントの役割を果たすモデルとの会話をシミュレートするインターフェース）、[Embeddings](https://platform.openai.com/docs/guides/embeddings/what-are-embeddings)（セマンティック検索などのタスクで使用できるベクターデータにテキストを変換する）、そして最新の[Text-to-speech](https://platform.openai.com/docs/guides/text-to-speech)（テキストをリアルな話し言葉のオーディオに変える）など、OpenAIの技術を駆使したサンプル音声会話アプリケーションです。このアプリケーションは、[Vue.js](https://vuejs.org/guide/introduction.html)に基づいたJavascriptフレームワークである[Nuxt](https://nuxt.com/docs/getting-started/introduction)を使用して構築されています。
 
-This is part of the series of projects I created as code exercise to study `Vue 3` and `Nuxt 3`.
+このアプリケーションには、「[スケジュール管理](#schedule-management)」と「[永続メモリ](#long-term-memory)」の2つの新機能があります。スケジュール管理を使用すると、チャットボットにスケジュールイベントの追加、変更、削除、取得を指示できます。永続メモリ機能を使用すると、将来の参照のためにチャットボットが覚えておく情報のスニペットを保存できます。これらの機能をチャットボットとの対話を通じてシームレスに統合することができます。将来的に、いくつかの機能強化、たとえばメールやメッセージング機能を追加することで、完全な個人アシスタントになるかもしれません。
 
 
 # The App
 
-![Screenshot](./docs/screenshot.png)
+![Main screen](./docs/app-main.png)
 
-The user interface is like a normal phone. A list of AI friends is shown. You select an AI friend that you want to talk to and you will be shown the talk page. When you are finished, press the close button to go back to Home page.
+From the main page, you can select which chatbot to talk to. Each one has different personality, speaks different language and has different voices. You can edit the Name and Personality of a chatbot by clicking on the Edit button next to its name. Although there is no function yet to add a new chatbot in the UI but you can add a chatbot and edit the voice and language setting of each chabot by editing `assets/contacts.json` file.
 
-Currently, there are 4 AI friends with different identity that you can talk to.
+![Edit Friend](./docs/friend-edit.png)
 
-* **Alice**, responds in Valspeak (Valley girl) English
-* **Daniel**, responds in Shakespearean, archaic English
-* **Junko**, responds in Kansai Japanese
-* **Mark**, responds in English
+You can also write your name and things about you by clicking the avatar button on the upper right corner. This is to let the chatbot know something about you.
 
-You can add more or edit the existing items by updating `assets/contacts.json` file.
+![Edit User](./docs/user-edit.png)
 
 
 # Audio Capture
 
-`Audio data` is recorded automatically if sound is detected.
-There is a threshold setting to eliminate background noise from triggering the audio capture. By default it is set to `-45dB` (0dB is the loudest sound). Adjust the variable `MIN_DECIBELS` if you want to set it to lower or higher depending on your needs.
+![Talk screen](./docs/app-talk.png)
 
-When recording is enabled and sound is not detected for `2 seconds`, the audio data will be uploaded and sent to the backend for transcribing. You can adjust the time by editing `MAX_COUNT`.
+Audio data is automatically recorded if sound is detected. A threshold setting is available to prevent background noise from triggering the audio capture. By default, this is set to **-45dB** (with 0dB representing the loudest sound). You can adjust this threshold by modifying the `MIN_DECIBELS`[^1] variable according to your needs.
 
-Please note that transcribing time depends on the length of the audio data so it is possible that a new reply comes first before the old reply. To go around this limitation, at first I was thinking of setting the audio capture part like in `walkie-talkie` where you press a button to speak and wait for the reply after.
+When recording is enabled and no sound is detected for **3 seconds**, the audio data is uploaded and sent to the backend for transcription. It’s worth noting that in typical conversations, the average gap between each turn is around 2 seconds. Similarly, the pause between sentences when speaking is approximately the same. Therefore, I’ve chosen a duration that’s long enough to mean to wait for a reply. You can adjust this duration by editing the `MAX_COUNT`[^1] variable.
 
-I suggest to run this app with your `headphone` or `earphone` attached to the machine or device. This will prevent the app from hearing its own reply. Also, please do not talk for too long, perhaps just one sentence at a time and pause a bit to allow time for transcription.
+The system can continuously record audio data until a reply is received. Once the audio reply from the chatbot is received and played, audio recording is disabled to prevent inadvertent recording of the chatbot’s own response.
+
+[^1]: You can find these variables in `pages/talk/[id].vue` file.
 
 
 # Whisper
 
-The `voice to text` part, using `Whisper`, takes time so do not expect instant reply.
-I am developing this in an old machine and transcribing a simple '_Good morning_' takes about 5 seconds or so.
-But perhaps in newer machines, it will be much faster.
-I have set the `model` to `tiny` to adapt to my circumstance but if you find that your machine is faster, set it to [other models](https://github.com/openai/whisper#available-models-and-languages) for improved voice transcription.
+All audio data will be uploaded to `public/uploads` directory in **m4a** file format.
+Before we submit the audio file to the Whisper api, first, we need to remove all silent parts.
+This is to prevent hallucinations from being generated by Whisper which is a [well known behavior](https://github.com/openai/whisper/discussions/1369).
+This is also the reason why it is advisable to set the `MIN_DECIBELS` as high as possible so that only speech is recorded.
 
-One of the AI friend (`Junko`) that you can talk to will respond in Japanese. 
-In this case it might be useful to set the `language` to Japanese and `task` to translate.
+## Remove Silent Parts From Audio
 
-```sh
-$ whisper audio.ogg --language English --task translate --model tiny --output_dir './public/upload'
-```
-
-By doing so, you can speak both in English and Japanese.
-
-If the voice input will always be in English, it is not necessary to set it to the same language as the expected output reply. The `text completion` endpoint will take care of that.
-
-Please note that the voice data will be uploaded in `public/upload` and the output files of `Whisper` will be saved in the same directory. I am not sure if it is possible to disable this. So you might see exponential increase of the number of files here. 
-
-Anyway, there are other configuration options that you can use to make `whisper` more efficient in translating/transcribing the voice data. Please check `whisper --help`.
-
-
-# Text Completion
-
-By writing a [descriptive instruction](https://beta.openai.com/docs/guides/completion/conversation) in the beginning of the prompt for `Text Completion`, it is possible to create different identity to the response.
-
-Also, to make the conversation seem more natural, the previous conversation is stored in the backend and attached to the prompt every time we made a request to the endpoint. This will make the AI remember previous details of the conversation and it is possible to infer to those details in your conversation. 
-
-However, doing so makes the prompt longer as the conversation takes time. Please note that `completion endpoint` has a [maximum limit of 2048 tokens (4096 tokens for newer models)](https://beta.openai.com/docs/api-reference/completions/create#completions/create-max_tokens)(4 chars = 1 token). But you will not hit the maximum since I set the ceiling much lower for the app (1800 tokens). When you reach this point, I remove the oldest parts of the conversation so that the conversation can continue. By that time, the remove parts will probably not matter anymore since the conversion has already dragged on for so long.
-
-
-# Text to Speech
-
-Using [Web Speech API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API), the text output from the `completion endpoint` will be spoken by a selected voice depending on the AI friend identity.
-
-You can change the voice parameter by editing the `assets/contacts.json` file. You can check the available voices and test settings using this [page](https://mdn.github.io/dom-examples/web-speech-api/speak-easy-synthesis/).
-
-
-# Nuxt
-
-Currently, I am using the basic `fetch` function to send audio data to the backend. In the future, I will probably replace this with `useLazyFetch` which is supposedly non-blocking.
-
-I also need to use `session` variable to store the chat conversation in the backend. I have seen [@sidebase/nuxt-session](https://github.com/sidebase/nuxt-session) but have not tried it yet.
-
-
-# Setup
-
-First, you need to install [`Whisper`](https://github.com/openai/whisper) and its `Python` dependencies
+To remove silent parts from the audio, we will be using `ffmpeg`. Be sure to [install it](#ffmpeg-setup).
 
 ```sh
-$ pip install git+https://github.com/openai/whisper.git
+ffmpeg -i sourceFile -af silenceremove=stop_periods=-1:stop_duration=1:stop_threshold=-50dB outputFile
 ```
 
-You also need `ffmpeg` installed on your system
+In this command:
+* `-1 sourceFile` specifies the input file.
+* `-af silenceremove` applies the filter `silencerremove`.
+* `stop_periods=-1` removes all periods of silence.
+* `stop_duration=1` sets any period of silence longer than 1 second as silence.
+* `stop_threshold=-50dB` sets any noise level below -50dB as silence.
+* `outputFile` the output file.
 
-```sh
-# macos
-$ brew install ffmpeg
+To invoke this shell command in our api route, we will be using `exec` from `child-process` module.
 
-# windows using chocolatey
-$ choco install ffmpeg
+After we remove the silent parts, we need to check the file size.
+Usually the file size will be much smaller from the original.
+Checking the file size, we will be disregarding anything below **16 KB**.
+We are assuming that for an audio file with a bit depth of 16 bits, this is equal to around 1 second of audio.
 
-# windows using scoop
-$ scoop install ffmpeg
+```
+file_size = duration in seconds x bitrate
 ```
 
-By this time, you can test `Whisper` using command line
+All of these processing, from removing the silent parts to checking the file size is just to ensure that we are only sending viable audio data to the Whisper api. We want to avoid sending data needlessly.
 
-```sh
-$ whisper myaudiofile.ogg --language English --task translate
+Now that we ensure our audio data is viable, we call the Whisper api
+
+```javascript
+const transcription = await openai.audio.transcriptions.create({
+    file: fs.createReadStream(filename),
+    language: lang,
+    response_format: 'text',
+    temperature: 0,
+})
 ```
 
-You can find sample audio files from [here](https://commons.wikimedia.org/wiki/Category:Audio_files_of_speeches).
+where `lang` is the [ISO 639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) code of the specified language of our chatbot. Please check the [list of the currently supported language](https://platform.openai.com/docs/guides/speech-to-text/supported-languages).
 
-If that is successful, you can proceed to install this app.
+We are just using `text` format since we do not need any timestamps and the `temperature` is set to zero because we want the output to be [deterministic](https://platform.openai.com/docs/api-reference/audio/createTranscription).
 
-Clone the repository and install the dependencies
+
+# Chat Completions API
+
+After we got the transcript from Whisper, we will then submit it to the Chat completions API with [function calling](https://platform.openai.com/docs/guides/function-calling). I am using the [latest OpenAI Node.JS module (v4)](https://www.npmjs.com/package/openai) unveiled yesterday (2023/11/07) with updated [function calling format](https://platform.openai.com/docs/guides/function-calling). With this latest version, it is now possible to ***invoke multiple functions in one turn***.
+
+```javascript
+let messages = [{ role: 'system', content: system_prompt }]
+
+let all_history = await mongoDb.getMessages()
+if(all_history.length > 0) {
+    const history_context = trim_array(all_history, 20)
+    messages = messages.concat(history_context)
+}
+
+messages.push({ role: 'user', content: user_query })
+
+let response = await openai.chat.completions.create({
+    temperature: 0.3,
+    messages,
+    tools: [
+        { type: 'function', function: add_calendar_entry },
+        { type: 'function', function: get_calendar_entry },
+        { type: 'function', function: edit_calendar_entry },
+        { type: 'function', function: delete_calendar_entry },
+        { type: 'function', function: save_new_memory },
+        { type: 'function', function: get_info_from_memory }
+    ]
+})
+```
+
+## The System Prompt
+
+The system prompt is the most important part that gives life to our chatbot.
+It is here where we set its name and persona based on the chatbot selected by the user.
+We also give it general instruction in how to respond.
+Then we gave it a list of functions it can use to invoke.
+Then we tells it who the user is and something about the user.
+Then lastly, we set the current date and time. This is important since we are invoking calendar functions.
+
+```javascript
+const today = new Date()
+
+let system_prompt = `In this session, we will simulate a voice conversation between two friends.\n\n` +
+    
+    `# Persona\n` +
+    `You will act as ${selPerson.name}.\n` +
+    `${selPerson.prompt}\n\n` +
+    `Please ensure that your responses are consistent with this persona.\n\n` +
+
+    `# Instructions\n` +
+    `The user is talking to you over voice on their phone, and your response will be read out loud with realistic text-to-speech (TTS) technology.\n` +
+    `Use natural, conversational language that are clear and easy to follow (short sentences, simple words).\n` +
+    `Keep the conversation flowing.\n` +
+    `Sometimes the user might just want to chat. Ask them relevant follow-up questions.\n\n` +
+    
+    `# Functions\n` +
+    `You have the following functions that you can call depending on the situation.\n` +
+    `add_calendar_entry, to add a new event.\n` +
+    `get_calendar_entry, to get the event at a particular date.\n` +
+    `edit_calendar_entry, to edit or update existing event.\n` +
+    `delete_calendar_entry, to delete an existing event.\n` +
+    `save_new_memory, to save new information to memory.\n` +
+    `get_info_from_memoryn, to retrieve information from memory.\n\n` +
+
+    `When you present the result from the function, only mention the relevant details for the user query.\n` +
+    `Omit information that is redundant and not relevant to the query.\n` +
+    `Always be concise and brief in your replies.\n\n` +
+
+    `# User\n` +
+    `As for me, in this simulation I am known as ${user_info.name}.\n` +
+    `${user_info.prompt}\n\n` +
+
+    `# Today\n` +
+    `Today is ${today}.\n`
+```
+
+## Context
+
+We are going to store all messages in **MongoDB**.
+
+However, to manage tokens and ensure that we will not be exceeding the model's maximum limit, we will not be sending everything but just the last 20 turns. The function `trim_array` will trim the stored messages if it exceeds 20 turns. You can set it lower or upper depending on your needs.
+
+```javascript
+const history_context = trim_array(all_history, 15)
+```
+
+You can clear the previous history of each chatbot from the main screen. 
+When we save each message from the user or chatbot, we set the id of the chatbot so that we can identify the related messages.
+
+![Clear messages](./docs/clear-messages.png)
+
+
+## Function Calling
+
+Our functions fall under the two new features: **Schedule Management** and **Long-Term Memory**.
+
+First, let us discuss how we handle **function calling** using the new format.
+We need to use the new **tools** parameter instead of the now deprecated **functions** parameter.
+Otherwise, we cannot invoke multiple function calls.
+
+```javascript
+let response = await openai.chat.completions.create({
+    temperature: 0.3,
+    messages,
+    tools: [
+        { type: 'function', function: add_calendar_entry },
+        { type: 'function', function: get_calendar_entry },
+        { type: 'function', function: edit_calendar_entry },
+        { type: 'function', function: delete_calendar_entry },
+        { type: 'function', function: save_new_memory },
+        { type: 'function', function: get_info_from_memory }
+    ]
+})
+```
+
+Check the **JSON Schema** of each functions from `lib/` directory.
+Here is for `add_calendar_entry`:
+
+```javascript
+{
+    "name": "add_calendar_entry",
+    "description": "Adds a new entry to the calendar",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "event": {
+                "type": "string",
+                "description": "The name or title of the event"
+            },
+            "date": {
+                "type": "string",
+                "description": "The date of the event in 'YYYY-MM-DD' format"
+            },
+            "time": {
+                "type": "string",
+                "description": "The time of the event in 'HH:MM' format"
+            },
+            "additional_detail": {
+                "type": "string",
+                "description": "Any additional details or notes related to the event"
+            }
+        },
+        "required": [ "event", "date", "time", "additional_detail" ]
+    }
+}
+```
+
+To dicuss how all these works, let's move on to [next section](#schedule-management).
+
+
+### Schedule Management
+
+### Long-Term Memory
+
+
+
+
+
+# FFMPEG Setup
+
+[FFMPEG](https://ffmpeg.org/) is used to remove silent parts in the audio file.
+
+To install ffmpeg command-line tool
+```
+# on Ubuntu or Debian
+sudo apt update && sudo apt install ffmpeg
+
+# on Arch Linux
+sudo pacman -S ffmpeg
+
+# on MacOS using Homebrew (https://brew.sh/)
+brew install ffmpeg
+
+# on Windows using Chocolatey (https://chocolatey.org/)
+choco install ffmpeg
+
+# on Windows using Scoop (https://scoop.sh/)
+scoop install ffmpeg
+```
+
+# MongoDB Setup
+
+[MongoDB](https://www.mongodb.com/try/download/community) will be used to store calendar entries and for long-term memory function.
+
+To install MongoDB Community Edition, please check this [page](https://www.mongodb.com/docs/manual/installation/).
+You might also want to [install MongoDB Shell](https://www.mongodb.com/docs/mongodb-shell/install/) to view the database.
+
+
+# App Setup
+
+First, be sure that [ffmpeg](#ffmpeg-setup) and [MongoDB](#mongodb-setup) are installed in your system.
+
+To clone the project repository and install the dependencies
 
 ```sh
 $ git clone https://github.com/supershaneski/openai-whisper-talk.git myproject
@@ -129,14 +293,16 @@ $ cd myproject
 $ npm install
 ```
 
-Create `.env` file in the root directory and supply your own [OpenAI API Key](https://beta.openai.com/docs/api-reference/authentication)
+Copy `.env.example` file and rename to `.env`, then open it and edit the items there with actual values. For the MongoDB items, you probably do not need to edit them unless you have different setup.
 
-`.env` file
-```javascript
-NUXT_OPENAI_API_KEY=my-openai-api-key-sample
+```
+NUXT_OPENAI_API_KEY=your-openai-api-key
+NUXT_MONGODB_HOST_NAME=localhost
+NUXT_MONGODB_PORT=27017
+NUXT_MONGODB_DB_NAME=embeddingvectorsdb
 ```
 
-Then run the app
+Then to run the app
 
 ```sh
 $ npm run dev
@@ -146,6 +312,8 @@ Open your browser to `http://localhost:5000/` (port number depends on availabili
 
 
 ## Using HTTPS
+
+> Note: I have not yet tested this with the latest update
 
 You might want to run this app using `https` protocol.
 This is needed to enable audio capture using a separate device like a smartphone.
