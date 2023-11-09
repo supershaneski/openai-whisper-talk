@@ -162,7 +162,7 @@ async function uploadFile(file) {
             
             if(func) {
                 
-                formData.append("function", func)
+                formData.append("tools", func)
 
             } else {
 
@@ -181,13 +181,13 @@ async function uploadFile(file) {
                 signal: abortController.value.signal,
             })
 
-            if(response.status === 'ok' && response.output.content) {
+            if(response.status === 'ok' && response.file) {
 
-                speakMessage(response.output.content)
+                audioDomRef.value.src = response.file
 
             }
 
-            if(response.output.function_call) {
+            if(response.output.tool_calls) {
 
                 func = response.output
 
@@ -231,11 +231,6 @@ async function handleSend() {
 
             } else {
                 
-                if(reset.value === true) {
-                    payload.reset = true
-                    reset.value = false
-                }
-
                 messageInput.value = ''
 
             }
