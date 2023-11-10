@@ -148,7 +148,7 @@ let system_prompt = `In this session, we will simulate a voice conversation betw
     `edit_calendar_entry, to edit or update existing event.\n` +
     `delete_calendar_entry, to delete an existing event.\n` +
     `save_new_memory, to save new information to memory.\n` +
-    `get_info_from_memoryn, to retrieve information from memory.\n\n` +
+    `get_info_from_memory, to retrieve information from memory.\n\n` +
 
     `When you present the result from the function, only mention the relevant details for the user query.\n` +
     `Omit information that is redundant and not relevant to the query.\n` +
@@ -599,9 +599,166 @@ const vector_result = vectors.map((v) => {
 const query_result = vector_result.length > 0 ? vector_result.map((v) => v.text).join("\n").slice(0, maxFilesLength) : ''
 ```
 
-That's it. Easy, huh?
+That's it. Neat, huh?
 
-Let's proceed to the final step.
+To demonstrate how all these work, let's check a sample conversation.
+
+> user: hey, tell me, what's your fave burger? cheese? bacon? mushroom?
+> bot: Oh, for sure! I'm all about that bacon burger, you know? The crispy bacon just takes it to a whole new level. What about you?
+> user: mushroom! with cheese! oh, i love it.
+> bot: Totally! Mushroom and cheese are a match made in burger heaven. Have you tried making your own mushroom and cheese burger at home? It's so worth it!
+> user: not yet. have you tried avocado? 
+> bot: Oh, totally! Avocado on a burger is like the cherry on top, you know? It adds that creamy, buttery goodness that takes the whole thing to the next level. Have you tried it?
+> user: yeah. there is actually a funny story related to it. so i've had avocado burger before. then one time, me and my friends went to ski trip. along the way we stopped by a burger shop. while i was browsing the menu, i saw avocado and i pointed it when i ordered. do you know what happened next?
+> bot: No way! What happened? Did they give you a burger with, like, a whole avocado on it? That would be hilarious!
+> user: no. but close. they gave me a burger with slice of avocado. nothing else. it turns out, the one i picked on the menu is for vegan option!
+> bot: Oh my gosh, that's too funny! So you ended up with a plain avocado burger instead of the one you were expecting. That's like a mix-up straight out of a comedy movie! Did you end up enjoying the avocado burger, though?
+> user: i ate it alright but was not satisfied, of course. hey, can you save this funny memory, it will be good to recall sometimes
+
+Function call (invoked save_new_memory):
+```javascript
+{                                                                                                                                   role: 'assistant',
+  content: null,
+  tool_calls: [
+    {
+    id: 'call_2TIYJOo9WJcprD7ozQsERoo4',
+    type: 'function',
+    function: {
+      name: 'save_new_memory',
+      arguments: '{"memory_title":"Avocado Burger Mix-Up","memory_detail":"Ordered an avocado burger at a ski trip burger shop, but got a plain avocado burger instead. Turns out, the one I picked on the menu was the vegan option! Hilarious mix-up.","memory_date":"2023-11-10","memory_tags":["funny","food","burger"]}'
+    }
+  }
+  ]
+}
+```
+
+At this point we call the embeddings API and get the vector data for the whole arguments and save it with the text to MongoDB.
+
+Function response:
+```javascript
+[                                                                                                                                   {
+    tool_call_id: 'call_2TIYJOo9WJcprD7ozQsERoo4',
+    role: 'tool',
+    name: 'save_new_memory',
+    content: '{\n  "message": "New memory saved"\n}'
+  }
+]
+```
+
+> bot: Memory saved! Now you've got that funny mix-up story to look back on whenever you need a good laugh. It's like a little slice of life, you know?
+
+Now, for retrieving info from memory
+
+> user: by the way, do you know the burger joint that is closing this month? the one in shibuya? what was the name?
+
+Function call (invoked get_calendar_entry):
+```javascript
+{                                                                                                                                   role: 'assistant',
+  content: null,
+  tool_calls: [
+    {
+    id: 'call_3PNs56LMrmDViZUnrxdBScGz',
+    type: 'function',
+    function: { name: 'get_calendar_entry', arguments: '{"date":"2023-11-30"}' }
+  }
+  ]
+}
+```
+
+Function response:
+```javascript
+[                                                                                                                                   {
+    tool_call_id: 'call_3PNs56LMrmDViZUnrxdBScGz',
+    role: 'tool',
+    name: 'get_calendar_entry',
+    content: '{\n  "message": "No entries found"\n}'
+  }
+]
+```
+> bot: I couldn't find any info about a burger joint closing in Shibuya this month. Maybe it's just a rumor, you know? But if you find out the name, let me know!
+> user: can you check your memory, i think i might have told you that before
+
+Function call (invoked get_info_from_memory):
+```javascript
+{                                                                                                                                   role: 'assistant',
+  content: null,
+  tool_calls: [
+    {
+    id: 'call_WVBvjR0MKgaaTzik7QBwk3Ei',
+    type: 'function',
+    function: {
+      name: 'get_info_from_memory',
+      arguments: '{"search":["burger","Shibuya","closing"]}'
+    }
+  }
+  ]
+}
+```
+
+Here we get the embeddings for the **search** terms instead of the actual user query.
+Then using the resulting vector data, we call `mongoDb.searchEntry` to search the stored vector data in MongoDB.
+
+Function response:
+```javascript
+[                                                                                                                                   {
+    tool_call_id: 'call_WVBvjR0MKgaaTzik7QBwk3Ei',
+    role: 'tool',
+    name: 'get_info_from_memory',
+    content: '{\n' +
+      '  "message": "Retrieved related info for burger,Shibuya,closing",\n' +
+      `  "result": "score: 0.8513867910905064\\n title: Becker's ハンバーガーショップ閉店 detail: 千葉の人気なバーガーショップ「Becker's」が閉店するらしい。 tags: 閉店,ハンバーガー,千葉\\nscore: 0.8506170963709474\\n title: トリキバーガーの渋谷店閉店情報 detail: 渋谷のトリキバーガーの店舗が閉店することが決まりました。最後の日は今月の20日です。お店は渋谷の井の頭通りにあります。 date: 2023-11-10 tags: トリキバーガー,渋谷,閉店情報\\nscore: 0.8307398914702265\\n title: Becker's閉店情報 detail: 千葉の人気なバーガーショップBecker'sが閉店する。最後の日は今月の22日。 date: 2023-11-22 tags: 閉店情報,Becker's...\n` +
+    '}'
+  }
+]
+```
+
+I am only showing partial result of the content but it contains several hits from the database that is related to the search terms. We send all the results to the Chat completions API and let the AI decide what to do.
+
+> bot: Oh, right! The burger joint that's closing in Shibuya is the Triki Burger. Their Shibuya location is shutting down on the 20th of this month. It's sad to see them go, you know?
+
+If you noticed, the partial result shown is in Japanese! So, definitely, this shows that we are not doing just simple keyword lookup here. You can add data of mixed language and query the memory using different language and chances are you will still get the answer. Let's try using our Russian bot, ***Vitaly***. I will be using **Google Translate** since I don't speak Russian.
+
+> user: Виталий, можешь вспомнить название моих любимых картофельных чипсов? (Vitaly, can you remember the name of my favorite potato chips?)
+
+Function calling (invoked get_info_from_memory):
+```javascript
+{                                                                                                                                   role: 'assistant',
+  content: null,
+  tool_calls: [
+    {
+    id: 'call_8fXETNlDMuKEXsitUuqt5PlE',
+    type: 'function',
+    function: {
+      name: 'get_info_from_memory',
+      arguments: '{"search":["картофельные чипсы"]}'
+    }
+  }
+  ]
+}
+```
+
+So, again, we get the embeddings for the **search** term and use it against each vector data stored in MongoDB.
+
+Function result:
+```javascript
+[                                                                                                                                   {
+    tool_call_id: 'call_8fXETNlDMuKEXsitUuqt5PlE',
+    role: 'tool',
+    name: 'get_info_from_memory',
+    content: '{\n' +
+      '  "message": "Retrieved related info for картофельные чипсы",\n' +
+      `  "result": "score: 0.7718838658905126\\n title: トムさんのお気に入りのパン detail: トムさんのお気に入りのパンはカレーパンとあんドーナツです。カレーパンはスパイシーなカレーとサクサクの生地が絶妙に合い、あんドーナツは甘さともちもち感が魅力です。\\nscore: 0.7560670627592779\\n title: Crisp Bacon Potato Chips detail: Brand: Dice tags: snack,potato chips,brand\\nscore: 0.7354783965092787\\n title: あまとうのあんみつ detail: 小樽のあまとうで食べるあんみつは絶品。...\n` +
+      '}'
+  }
+]
+```
+
+You'll see that the data result shown is mixed, with Japanese and English texts.
+
+> bot: Твои любимые картофельные чипсы - Crisp Bacon Potato Chips. (Your favorite potato chips are Crisp Bacon Potato Chips.)
+
+
+Okay, let's proceed to the final step.
 
 
 # Text-to-Speech API
