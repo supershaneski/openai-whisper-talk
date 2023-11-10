@@ -237,7 +237,7 @@ export default defineEventHandler(async (event) => {
         `edit_calendar_entry, to edit or update existing event.\n` +
         `delete_calendar_entry, to delete an existing event.\n` +
         `save_new_memory, to save new information to memory.\n` +
-        `get_info_from_memoryn, to retrieve information from memory.\n\n` +
+        `get_info_from_memory, to retrieve information from memory.\n\n` +
 
         `When you present the result from the function, only mention the relevant details for the user query.\n` +
         `Omit information that is redundant and not relevant to the query.\n` +
