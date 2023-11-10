@@ -9,6 +9,7 @@ dist
 _bin
 public/upload/*.m4a
 public/upload/*.mp3
+public/upload/*.webm
 *.bu.json
 *.bu.html
 *.bu.css

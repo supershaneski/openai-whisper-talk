@@ -141,7 +141,7 @@ async function handleStop() {
     const blob = new Blob(chunks.value, {type: 'audio/webm;codecs=opus'})
     chunks.value = []
 
-    //audioFile.value = new File([blob], `file${Date.now()}.m4a`);
+    audioFile.value = new File([blob], `file${Date.now()}.webm`);
 
 }
 
