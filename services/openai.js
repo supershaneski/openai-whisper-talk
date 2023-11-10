@@ -34,7 +34,7 @@ export async function embedding({
 
 export async function chat({
     model = 'gpt-3.5-turbo-1106', //'gpt-3.5-turbo-0613',
-    max_tokens = 1024,
+    max_tokens = 2048, //1024
     temperature = 0,
     messages,
     tools,

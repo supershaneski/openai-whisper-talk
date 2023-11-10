@@ -43,7 +43,7 @@ export default defineEventHandler(async (event) => {
 
                 resolve({
                     status: "ok",
-                    //function: { content: null, role: 'assistant', function_call: fields.function.function_call }, // strip message
+                    count: fields.count,
                     response: fields.tools
                 })
 
@@ -59,7 +59,10 @@ export default defineEventHandler(async (event) => {
 
     })
 
-    if(data.status === "error") {
+    console.log(`LoopCount: ${data.count}`)
+
+    const MAX_LOOP_COUNT = 5 // maximum loop
+    if(data.status === "error" || data.count >= MAX_LOOP_COUNT) {
 
         return {
             status: "error"
@@ -72,7 +75,6 @@ export default defineEventHandler(async (event) => {
     let function_return = data.response
     let api_outputs = []
 
-    //function_return.tool_calls.forEach(async (tool) => {
     for(const tool of function_return.tool_calls) {
         
         let function_name = tool.function.name
@@ -96,13 +98,25 @@ export default defineEventHandler(async (event) => {
 
             const editret = await mongoDb.editCalendarEntry(function_args)
 
-            api_output = { message: 'Entry edited' }
+            if(!editret) {
+                api_output = { message: 'Failed to edit entry', name: function_args.event }
+            }
+
+            api_output = editret.modifiedCount > 0 ? { message: 'Entry edited', name: function_args.event } : { message: 'Entry not found' }
 
         } else if(function_name === 'delete_calendar_entry') {
 
             const delret = await mongoDb.deleteCalendarEntry(function_args)
 
-            api_output = delret.deletedCount && delret.deletedCount >= 0 ? { message: delret.deletedCount > 0 ? 'Entry deleted' : 'No entry deleted' } : { ...delret.message }
+            if(!delret) {
+                api_output = { message: 'Failed to delete entry', name: function_args.event }
+            }
+
+            if(delret.message) {
+                api_output = delret.message
+            }
+
+            api_output = { name: function_args.event, message: delret.deletedCount > 0 ? 'Entry deleted' : 'Failed to delete entry' }
 
         } else if(function_name === 'save_new_memory') {
 
@@ -188,21 +202,19 @@ export default defineEventHandler(async (event) => {
         }
 
         api_outputs.push({ tool_call_id: tool.id, role: 'tool', name: tool.function.name, content: JSON.stringify(api_output, null, 2) })
-
+        
     }
-    //})
 
-    console.log('api-output', api_outputs)
+    if(api_outputs.length === 0) {
 
-    /*
-    const flagForce = true
-    if(flagForce) {
         return {
             status: "error"
         }
+
     }
-    */
     
+    console.log('api-output', api_outputs)
+
     const today = new Date()
 
     let system_prompt = `In this session, we will simulate a voice conversation between two friends.\n\n` +
@@ -253,9 +265,9 @@ export default defineEventHandler(async (event) => {
         messages = messages.concat(history_context)
 
     }
-
+    
     messages.push(function_return)
-    //messages.push({ role: 'function', name: function_name, content: JSON.stringify(api_output, null, 2) })
+
     for(const api_output_item of api_outputs) {
         messages.push(api_output_item)
     }
@@ -266,18 +278,8 @@ export default defineEventHandler(async (event) => {
     try {
 
         let result = await chat({
-            //model: 'gpt-3.5-turbo-0613',
-            //max_tokens: 1024,
             temperature: 0.3,
             messages,
-            /*functions: [
-                add_calendar_entry, 
-                get_calendar_entry, 
-                edit_calendar_entry, 
-                delete_calendar_entry,
-                save_new_memory,
-                get_info_from_memory
-            ]*/
             tools: [
                 { type: 'function', function: add_calendar_entry },
                 { type: 'function', function: get_calendar_entry },
@@ -301,7 +303,7 @@ export default defineEventHandler(async (event) => {
             const audioFile = path.join('public', 'upload', filename)
 
             await speech({
-                voice: selPerson.voice.name2 || 'alloy',
+                voice: selPerson.voice.name || 'alloy',
                 input: result.message.content.replace(/\n/g, ''),
                 filename: audioFile,
             })

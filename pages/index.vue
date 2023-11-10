@@ -6,8 +6,8 @@ import DialogEditPrompt from '~~/components/DialogEditPrompt.vue'
 import contacts from '../assets/contacts.json'
 
 const showEditPrompt = ref(false)
-const dialogParam = ref({})
 const isMounted = ref(false)
+const dialogParam = ref({})
 const messages = ref([])
 
 function handleCloseDialog() {

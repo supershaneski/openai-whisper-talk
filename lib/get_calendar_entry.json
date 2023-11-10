@@ -1,6 +1,6 @@
 {
     "name": "get_calendar_entry",
-    "description": "Get calendar entry by given search word",
+    "description": "Get calendar entry by given date",
     "parameters": {
         "type": "object",
         "properties": {

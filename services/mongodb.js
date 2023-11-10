@@ -48,7 +48,7 @@ export default class MongoDB {
             }
 
             const calendarEntrySchema = new mongoose.Schema({
-                event: String,
+                event: { type: String, index: true }, // String,
                 date: String,
                 time: String,
                 additional_detail: String,
@@ -103,13 +103,22 @@ export default class MongoDB {
 
     }
 
+    async getCalendarEntryByEvent(event) {
+
+        if(this.error) return
+
+        return await this.CalendarEntry.find({ $text: { $search: event } })
+
+    }
+
     async editCalendarEntry(editedEvent) {
 
         if(this.error) return
 
         let { event, ...rest } = editedEvent
 
-        return await this.CalendarEntry.updateOne({ event: event }, { $set: rest })
+        //return await this.CalendarEntry.updateOne({ event: event }, { $set: rest })
+        return await this.CalendarEntry.updateOne({ $text: { $search: event } }, { $set: rest })
 
     }
 
@@ -121,14 +130,15 @@ export default class MongoDB {
 
         if(delete_type === 'event_name') {
 
-            return await this.CalendarEntry.deleteOne({ event: event })
+            //return await this.CalendarEntry.deleteOne({ event: event })
+            return await this.CalendarEntry.deleteOne({ $text: { $search: event } })
 
         } else {
 
             const events_by_date = this.CalendarEntry.find({ date: date })
 
             if(events_by_date.length > 1) {
-                return { message: 'More than one event exist in same date', events: events_by_date }
+                return { message: 'More than one events found in same date. Which one do you want to delete?', events: (await events_by_date).map((v) => v.event) }
             } else {
                 return await this.CalendarEntry.deleteOne({ date: date })
             }

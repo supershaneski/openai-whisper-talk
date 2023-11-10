@@ -1,6 +1,6 @@
 {
     "name": "edit_calendar_entry",
-    "description": "Edits or updates entry to the calendar",
+    "description": "Edits entry to the calendar",
     "parameters": {
         "type": "object",
         "properties": {

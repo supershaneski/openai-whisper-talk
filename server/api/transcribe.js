@@ -43,7 +43,7 @@ export default defineEventHandler(async (event) => {
                 isAudioExist = false
 
             }
-
+            
             selPerson = contacts.items.find(item => item.name.toLowerCase() === fields.name.toLowerCase())
 
             if(isAudioExist) {
@@ -52,11 +52,8 @@ export default defineEventHandler(async (event) => {
                 
                     let filename = Date.now() + Math.round(Math.random() * 100000) + files.file.originalFilename
                     let newPath = `${path.join("public", "upload", filename)}`
-                    
                     let oldPath = files.file.filepath
                     
-                    // it is probably not necessary to copy the file to the upload folder
-                    // and just directly use the original file location
                     fs.copyFileSync(oldPath, newPath)
                     
                     resolve({
@@ -149,7 +146,6 @@ export default defineEventHandler(async (event) => {
 
         }
 
-        // Do not send to whisper if less than 16KB
         if(sizeKB < 16) {
 
             return {
@@ -278,7 +274,7 @@ export default defineEventHandler(async (event) => {
             let text_speak = result.message.content.replace(/\n/g, '')
 
             await speech({
-                voice: selPerson.voice.name2 || 'alloy',
+                voice: selPerson.voice.name || 'alloy',
                 input: text_speak,
                 filename: audioFile,
             })

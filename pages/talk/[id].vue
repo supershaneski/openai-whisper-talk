@@ -25,7 +25,6 @@ const animFrame = ref(null)
 const timer = ref(null)
 
 const audioFile = ref(null)
-const reset = ref(true)
 
 const abortController = ref(null)
 const selectedPerson = ref(null)
@@ -36,8 +35,6 @@ const startLoader = ref(false)
 
 const inputRef = ref(null)
 const messageInput = ref('')
-
-let synth = null
 
 useHead({
   title: `${config.public.appTitle} - Talking to ${route.params.id}`,
@@ -152,6 +149,7 @@ async function uploadFile(file) {
 
     let flagContinue = true
     let func = null
+    let count = 0
 
     do {
 
@@ -159,6 +157,7 @@ async function uploadFile(file) {
             
             let formData = new FormData()
             formData.append("name", selectedPerson.value.name)
+            formData.append("count", count)
             
             if(func) {
                 
@@ -205,6 +204,8 @@ async function uploadFile(file) {
 
         }
 
+        count++
+
     } while(flagContinue)
 
 }
@@ -215,6 +216,7 @@ async function handleSend() {
 
     let flagContinue = true
     let func = null
+    let count = 0
 
     do {
 
@@ -222,7 +224,8 @@ async function handleSend() {
             
             let payload = {
                 name: selectedPerson.value.name,
-                message: message
+                message: message,
+                count: count,
             }
             
             if(func) {
@@ -254,7 +257,6 @@ async function handleSend() {
 
             console.log("response", response)
 
-            //if(response.output.function_call) {
             if(response.output.tool_calls) {
 
                 func = response.output
@@ -273,36 +275,9 @@ async function handleSend() {
 
         }
 
+        count++
+
     } while(flagContinue)
-
-}
-
-async function speakMessage(msg) {
-
-    if(!synth) return
-
-    if(msg.length === 0) return
-
-    const utterThis = new SpeechSynthesisUtterance(msg);
-
-    const voices = synth.getVoices();
-    for (const voice of voices) {
-        if (voice.name === selectedPerson.value.voice.name) {
-            utterThis.voice = voice;
-        }
-    }
-    
-    utterThis.rate = selectedPerson.value.voice.rate
-    utterThis.pitch = selectedPerson.value.voice.pitch
-    
-    utterThis.onstart = () => {
-        startLoader.value = true
-    }
-    utterThis.onend = () => {
-        startLoader.value = false
-    }
-
-    synth.speak(utterThis);
 
 }
 
@@ -392,8 +367,6 @@ onMounted(() => {
         errorMessage.value = "Media devices not supported"
         
     }
-
-    //synth = window.speechSynthesis;
 
     abortController.value = new AbortController()
 
@@ -564,7 +537,7 @@ onBeforeUnmount(() => {
 
 .name {
     text-transform: capitalize;
-    font-size: calc(10px + 6vmin); /*1.5rem;*/
+    font-size: calc(10px + 6vmin);
     color: var(--color-text-green);
     margin: 0;
     padding: 0;
