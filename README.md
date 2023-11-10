@@ -5,13 +5,13 @@ v0.0.2
 
 **openai-whisper-talk** is a sample voice conversation application powered by **OpenAI** technologies such as [Whisper](https://platform.openai.com/docs/guides/speech-to-text), an automatic speech recognition (ASR) system, [Chat Completions](https://platform.openai.com/docs/guides/text-generation/chat-completions-api), an interface that simulates conversation with a model that plays the role of assistant, [Embeddings](https://platform.openai.com/docs/guides/embeddings/what-are-embeddings), converts text to vector data that can be used in tasks like semantic searching, and the latest [Text-to-Speech](https://platform.openai.com/docs/guides/text-to-speech), that turn text ito lifelike spoken audio. The application is built using [Nuxt](https://nuxt.com/docs/getting-started/introduction), a Javascript framework based on [Vue.js](https://vuejs.org/guide/introduction.html).
 
-The application has two new features: [Schedule Management](#schedule-management) and [Long-Term Memory](#long-term-memory). With Schedule Management, you can command the chatbot to add, modify, delete, and retrieve scheduled events. The Long-Term Memory feature allows you to store snippets of information that the chatbot will remember for future reference. You can seamlessly integrate both functions into your conversations simply by interacting with the chatbot.
+The application has two new features: [Schedule Management](#schedule-management) and [Long-Term Memory](#long-term-memory). With Schedule Management, you can command the chatbot to add, modify, delete, and retrieve scheduled events. The Long-Term Memory feature allows you to store snippets of information that the chatbot will remember for future reference. You can seamlessly integrate both functions [into your conversations](#sample-conversation---schedule-management) simply by interacting with the chatbot.
 
 ---
 
 **openai-whisper-talk**は、[Whisper](https://platform.openai.com/docs/guides/speech-to-text)（自動音声認識（ASR）システム）、[Chat completions](https://platform.openai.com/docs/guides/text-generation/chat-completions-api)（アシスタントの役割を果たすモデルとの会話をシミュレートするインターフェース）、[Embeddings](https://platform.openai.com/docs/guides/embeddings/what-are-embeddings)（セマンティック検索などのタスクで使用できるベクターデータにテキストを変換する）、そして最新の[Text-to-speech](https://platform.openai.com/docs/guides/text-to-speech)（テキストをリアルな話し言葉のオーディオに変える）など、OpenAIの技術を駆使したサンプル音声会話アプリケーションです。このアプリケーションは、[Vue.js](https://vuejs.org/guide/introduction.html)に基づいたJavascriptフレームワークである[Nuxt](https://nuxt.com/docs/getting-started/introduction)を使用して構築されています。
 
-このアプリケーションには、「[スケジュール管理](#schedule-management)」と「[永続メモリ](#long-term-memory)」の2つの新機能があります。スケジュール管理を使用すると、チャットボットにスケジュールイベントの追加、変更、削除、取得を指示できます。永続メモリ機能を使用すると、将来の参照のためにチャットボットが覚えておく情報のスニペットを保存できます。これらの機能をチャットボットとの対話を通じてシームレスに統合することができます。将来的に、いくつかの機能強化、たとえばメールやメッセージング機能を追加することで、完全な個人アシスタントになるかもしれません。
+このアプリケーションには、「[スケジュール管理](#schedule-management)」と「[永続メモリ](#long-term-memory)」の2つの新機能があります。スケジュール管理を使用すると、チャットボットにスケジュールイベントの追加、変更、削除、取得を指示できます。永続メモリ機能を使用すると、将来の参照のためにチャットボットが覚えておく情報のスニペットを保存できます。これらの機能を[チャットボットとの対話](#sample-conversation---long-term-memory)を通じてシームレスに統合することができます。将来的に、いくつかの機能強化、たとえばメールやメッセージング機能を追加することで、完全な個人アシスタントになるかもしれません。
 
 
 # The App
@@ -248,6 +248,7 @@ For **Schedule Management**, we have the following functions:
 
 All calendar entries will be stored in MongoDB. Please note that all entries will be accessible to all chatbots.
 
+### Sample Conversation - Schedule Management
 Let’s take a look at a sample chat conversation to demonstrate how these elements interact:
 
 > user: good morning, jeeves. what's my schedule for today?
@@ -601,18 +602,30 @@ const query_result = vector_result.length > 0 ? vector_result.map((v) => v.text)
 
 That's it. Neat, huh?
 
+### Sample Conversation - Long-Term Memory
+
 To demonstrate how all these work, let's check a sample conversation.
 
 > user: hey, tell me, what's your fave burger? cheese? bacon? mushroom?
+
 > bot: Oh, for sure! I'm all about that bacon burger, you know? The crispy bacon just takes it to a whole new level. What about you?
+
 > user: mushroom! with cheese! oh, i love it.
+
 > bot: Totally! Mushroom and cheese are a match made in burger heaven. Have you tried making your own mushroom and cheese burger at home? It's so worth it!
+
 > user: not yet. have you tried avocado? 
+
 > bot: Oh, totally! Avocado on a burger is like the cherry on top, you know? It adds that creamy, buttery goodness that takes the whole thing to the next level. Have you tried it?
+
 > user: yeah. there is actually a funny story related to it. so i've had avocado burger before. then one time, me and my friends went to ski trip. along the way we stopped by a burger shop. while i was browsing the menu, i saw avocado and i pointed it when i ordered. do you know what happened next?
+
 > bot: No way! What happened? Did they give you a burger with, like, a whole avocado on it? That would be hilarious!
+
 > user: no. but close. they gave me a burger with slice of avocado. nothing else. it turns out, the one i picked on the menu is for vegan option!
+
 > bot: Oh my gosh, that's too funny! So you ended up with a plain avocado burger instead of the one you were expecting. That's like a mix-up straight out of a comedy movie! Did you end up enjoying the avocado burger, though?
+
 > user: i ate it alright but was not satisfied, of course. hey, can you save this funny memory, it will be good to recall sometimes
 
 Function call (invoked save_new_memory):
@@ -676,6 +689,7 @@ Function response:
 ]
 ```
 > bot: I couldn't find any info about a burger joint closing in Shibuya this month. Maybe it's just a rumor, you know? But if you find out the name, let me know!
+
 > user: can you check your memory, i think i might have told you that before
 
 Function call (invoked get_info_from_memory):
@@ -753,7 +767,7 @@ Function result:
 ]
 ```
 
-You'll see that the data result shown is mixed, with Japanese and English texts.
+You can see that the data result shown is mixed, with Japanese and English texts.
 
 > bot: Твои любимые картофельные чипсы - Crisp Bacon Potato Chips. (Your favorite potato chips are Crisp Bacon Potato Chips.)
 
