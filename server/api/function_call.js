@@ -72,6 +72,14 @@ export default defineEventHandler(async (event) => {
 
     console.log("data-response", data.response.tool_calls)
 
+    console.log("isArray", Array.isArray(data.response.tool_calls))
+
+    if(!Array.isArray(data.response.tool_calls)) {
+        return {
+            status: "error"
+        }
+    }
+
     let function_return = data.response
     let api_outputs = []
 
