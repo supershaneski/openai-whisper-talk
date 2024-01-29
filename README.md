@@ -7,11 +7,15 @@ v0.0.2
 
 The application has two new features: [Schedule Management](#schedule-management) and [Long-Term Memory](#long-term-memory). With Schedule Management, you can command the chatbot to add, modify, delete, and retrieve scheduled events. The Long-Term Memory feature allows you to store snippets of information that the chatbot will remember for future reference. You can seamlessly integrate both functions [into your conversations](#sample-conversation---schedule-management) simply by interacting with the chatbot.
 
+
+> **Update:** Updated the openai module to latest version and [replaced the embedding model](#embeddings-api) from `text-embedding-ada-002` to the [new v3 model `text-embedding-3-small`](https://openai.com/blog/new-embedding-models-and-api-updates).
+
 ---
 
 **openai-whisper-talk**は、[Whisper](https://platform.openai.com/docs/guides/speech-to-text)（自動音声認識（ASR）システム）、[Chat completions](https://platform.openai.com/docs/guides/text-generation/chat-completions-api)（アシスタントの役割を果たすモデルとの会話をシミュレートするインターフェース）、[Embeddings](https://platform.openai.com/docs/guides/embeddings/what-are-embeddings)（セマンティック検索などのタスクで使用できるベクターデータにテキストを変換する）、そして最新の[Text-to-speech](https://platform.openai.com/docs/guides/text-to-speech)（テキストをリアルな話し言葉のオーディオに変える）など、OpenAIの技術を駆使したサンプル音声会話アプリケーションです。このアプリケーションは、[Vue.js](https://vuejs.org/guide/introduction.html)に基づいたJavascriptフレームワークである[Nuxt](https://nuxt.com/docs/getting-started/introduction)を使用して構築されています。
 
 このアプリケーションには、「[スケジュール管理](#schedule-management)」と「[永続メモリ](#long-term-memory)」の2つの新機能があります。スケジュール管理を使用すると、チャットボットにスケジュールイベントの追加、変更、削除、取得を指示できます。永続メモリ機能を使用すると、将来の参照のためにチャットボットが覚えておく情報のスニペットを保存できます。これらの機能を[チャットボットとの対話](#sample-conversation---long-term-memory)を通じてシームレスに統合することができます。将来的に、いくつかの機能強化、たとえばメールやメッセージング機能を追加することで、完全な個人アシスタントになるかもしれません。
+
 
 
 # The App
@@ -521,11 +525,13 @@ All previous functions have primarily focused on typical data retrieval and sett
 
 # Embeddings API
 
+> **Update**: I have replaced `text-embedding-ada-002` with `text-embedding-3-small`. Based on my tests, the latter performs well enough. The cosine similarity scores between closely related answers and non-relevant answers are markedly distinct. Furthermore, the cost-performance of the v3 small model, [priced at $0.00002/1K tokens](https://openai.com/pricing), is a no brainer 😁. However, you need to convert your vector data from ada to v3 small since they are not compatible. Note that we also [lowered the threshold from 0.72 to 0.3](#cosine-similarity).
+
 To put it simply, embeddings measures the relatedness of text strings. If we call the API, it will give us vector data of floating numbers associated with the input text.
 
 ```javascript
 const embedding = await openai.embeddings.create({
-  model: "text-embedding-ada-002",
+  model: "text-embedding-3-small", //"text-embedding-ada-002",
   input: "The quick brown fox jumped over the lazy dog",
   encoding_format: "float",
 })
@@ -536,7 +542,7 @@ To use this in our application, we will implement what they call **Retrieval-Aug
 Initially, when new data is received from the save_new_memory function, we call the Embeddings API to generate its vector representation. This vector data is then stored in **MongoDB** for future use.
 
 Subsequently, when a user submits a query that requires memory retrieval, the get_info_from_memory function is triggered. 
-We call the Embeddings API for the search parameters and compares them with the stored vector data using a simple cosine similarity. This comparison typically yields several matches with varying scores. We have set our threshold to a score of 0.72 or higher, and we limit the results to a maximum of 10.
+We call the Embeddings API for the search parameters and compares them with the stored vector data using a simple cosine similarity. This comparison typically yields several matches with varying scores. We have set our threshold to a score of0.3 (0.72 for ada model) or higher, and we limit the results to a maximum of 10.
 
 The results are then passed to the final Chat Completions API, which determines the most suitable response to the user’s query. The AI has the capability to select one or more results as the basis for its response, depending on the nature of the query. This is where the true power of AI is demonstrated. Rather than simply regurgitating all the information it receives, the AI analyzes the data and formulates an appropriate response. If the result from the RAG is deemed sufficient, it will generate a positive text response.
 
@@ -584,10 +590,12 @@ const newVector = new MemoryVectors({
 newVector.save()
 ```
 
+### Cosine-Similarity
+
 To search the stored vector data with the embeddings of the user query
 
 ```javascript
-const cosineSimThreshold = 0.72
+const cosineSimThreshold = 0.3 // Note: for text-embedding-ada-002, 0.72 but for v3 embed models, use 0.3
 const maxResults = 10
 const maxFilesLength = 2000 * 3
 
