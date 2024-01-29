@@ -146,11 +146,15 @@ export default defineEventHandler(async (event) => {
 
             let text_embeddings = []
 
+            console.log('input', batches)
+
             try {
 
                 const batch_promises = batches.map((batch) => embedding({ input: batch }))
 
                 const embeddings = (await Promise.all(batch_promises)).flat()
+
+                console.log('embeddings', embeddings)
 
                 text_embeddings = embeddings.map((embedding, index) => ({
                     embedding,
@@ -309,15 +313,17 @@ export default defineEventHandler(async (event) => {
 
             let filename = 'voice' + Date.now() + Math.round(Math.random() * 100000) + '.mp3'
             const audioFile = path.join('public', 'upload', filename)
-
+            
+            let text_speak = result.message.content.replace(/\n/g, '')
+            
             await speech({
                 voice: selPerson.voice.name || 'alloy',
-                input: result.message.content.replace(/\n/g, ''),
+                input: text_speak,
                 filename: audioFile,
             })
 
             result_file = `/upload/${filename}`
-    
+            
         }
 
     } catch(error) {

@@ -272,7 +272,7 @@ export default defineEventHandler(async (event) => {
             const audioFile = path.join('public', 'upload', filename)
 
             let text_speak = result.message.content.replace(/\n/g, '')
-
+            
             await speech({
                 voice: selPerson.voice.name || 'alloy',
                 input: text_speak,
@@ -280,7 +280,7 @@ export default defineEventHandler(async (event) => {
             })
 
             result_file = `/upload/${filename}`
-
+            
         }
 
     } catch(error) {

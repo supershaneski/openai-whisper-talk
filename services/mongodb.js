@@ -201,12 +201,23 @@ export default class MongoDB {
         return vectors.length
     }
 
-    getCosineSimilarity(vectors, search_query, cosineSimThreshold = 0.72, maxFilesLength = 2000 * 3, maxResults = 10) {
-        
+    /**
+     * For text-embedding-ada-002, use 0.72 threshold
+     * For text-embedding-3-small, text-embedding-3-large, use 0.3 
+     */
+    getCosineSimilarity(vectors, search_query, cosineSimThreshold = 0.3, maxFilesLength = 2000 * 3, maxResults = 10) {
+        //cosineSimThreshold = 0.72, for text-embedding-ada-002
+
         if(this.error) return
 
         const vector_result = vectors.map((v) => {
-            return v.getScore(search_query)
+
+            const s = v.getScore(search_query)
+            //return v.getScore(search_query)
+            
+            console.log(s)
+
+            return s
         }).flat().sort((a, b) => b.score - a.score).filter((chunk) => chunk.score > cosineSimThreshold).slice(0, maxResults)
         
         return vector_result.length > 0 ? vector_result.map((v) => `score: ${v.score}\n${v.text}`).join("\n").slice(0, maxFilesLength) : ''

@@ -9,7 +9,7 @@ const openai = new OpenAI({
 
 export async function embedding({
     input,
-    model = 'text-embedding-ada-002',
+    model = 'text-embedding-3-small', //'text-embedding-3-small', //'text-embedding-ada-002',
     encoding_format = 'float'
 }) {
 
